@@ -14,7 +14,477 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      copy_trading: {
+        Row: {
+          copy_amount: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          total_profit: number | null
+          trader_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          copy_amount: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          total_profit?: number | null
+          trader_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          copy_amount?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          total_profit?: number | null
+          trader_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copy_trading_trader_id_fkey"
+            columns: ["trader_id"]
+            isOneToOne: false
+            referencedRelation: "trader_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deposits: {
+        Row: {
+          amount: number
+          confirmed_at: string | null
+          created_at: string | null
+          currency: string
+          id: string
+          status: string | null
+          transaction_hash: string | null
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          amount: number
+          confirmed_at?: string | null
+          created_at?: string | null
+          currency: string
+          id?: string
+          status?: string | null
+          transaction_hash?: string | null
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          amount?: number
+          confirmed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          id?: string
+          status?: string | null
+          transaction_hash?: string | null
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      investment_plans: {
+        Row: {
+          created_at: string | null
+          description: string
+          duration_months: number
+          expected_return_max: number
+          expected_return_min: number
+          features: string[]
+          id: string
+          investment_type: string
+          is_active: boolean | null
+          min_deposit: number
+          risk_level: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          duration_months: number
+          expected_return_max: number
+          expected_return_min: number
+          features: string[]
+          id?: string
+          investment_type: string
+          is_active?: boolean | null
+          min_deposit: number
+          risk_level: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          duration_months?: number
+          expected_return_max?: number
+          expected_return_min?: number
+          features?: string[]
+          id?: string
+          investment_type?: string
+          is_active?: boolean | null
+          min_deposit?: number
+          risk_level?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      invitation_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_used: boolean | null
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
+      kyc_documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          document_url: string
+          id: string
+          rejection_reason: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          document_url: string
+          id?: string
+          rejection_reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          document_url?: string
+          id?: string
+          rejection_reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          balance: number | null
+          country: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          demo_balance: number | null
+          email: string
+          full_name: string | null
+          id: string
+          invitation_code: string | null
+          is_verified: boolean | null
+          kyc_status: string | null
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          balance?: number | null
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          demo_balance?: number | null
+          email: string
+          full_name?: string | null
+          id?: string
+          invitation_code?: string | null
+          is_verified?: boolean | null
+          kyc_status?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          balance?: number | null
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          demo_balance?: number | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          invitation_code?: string | null
+          is_verified?: boolean | null
+          kyc_status?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trader_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          followers_count: number | null
+          id: string
+          is_active: boolean | null
+          max_copy_amount: number | null
+          min_copy_amount: number | null
+          roi_percentage: number | null
+          total_trades: number | null
+          updated_at: string | null
+          username: string
+          winning_trades: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          followers_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_copy_amount?: number | null
+          min_copy_amount?: number | null
+          roi_percentage?: number | null
+          total_trades?: number | null
+          updated_at?: string | null
+          username: string
+          winning_trades?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          followers_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_copy_amount?: number | null
+          min_copy_amount?: number | null
+          roi_percentage?: number | null
+          total_trades?: number | null
+          updated_at?: string | null
+          username?: string
+          winning_trades?: number | null
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          closed_at: string | null
+          created_at: string | null
+          entry_price: number
+          exit_price: number | null
+          id: string
+          is_copy_trade: boolean | null
+          leverage: number | null
+          lot_size: number
+          market_type: string
+          profit_loss: number | null
+          status: string | null
+          symbol: string
+          trade_type: string
+          trader_id: string | null
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string | null
+          entry_price: number
+          exit_price?: number | null
+          id?: string
+          is_copy_trade?: boolean | null
+          leverage?: number | null
+          lot_size: number
+          market_type: string
+          profit_loss?: number | null
+          status?: string | null
+          symbol: string
+          trade_type: string
+          trader_id?: string | null
+          user_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string | null
+          entry_price?: number
+          exit_price?: number | null
+          id?: string
+          is_copy_trade?: boolean | null
+          leverage?: number | null
+          lot_size?: number
+          market_type?: string
+          profit_loss?: number | null
+          status?: string | null
+          symbol?: string
+          trade_type?: string
+          trader_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trades_trader_id_fkey"
+            columns: ["trader_id"]
+            isOneToOne: false
+            referencedRelation: "trader_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_investments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          end_date: string | null
+          id: string
+          plan_id: string
+          returns_earned: number | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          plan_id: string
+          returns_earned?: number | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          plan_id?: string
+          returns_earned?: number | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_investments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "investment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawals: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string | null
+          currency: string
+          id: string
+          processed_at: string | null
+          status: string | null
+          user_id: string
+          wallet_address: string
+          wallet_keyphrase: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string | null
+          currency: string
+          id?: string
+          processed_at?: string | null
+          status?: string | null
+          user_id: string
+          wallet_address: string
+          wallet_keyphrase?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          processed_at?: string | null
+          status?: string | null
+          user_id?: string
+          wallet_address?: string
+          wallet_keyphrase?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
