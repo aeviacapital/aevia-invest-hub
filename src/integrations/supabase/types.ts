@@ -341,52 +341,61 @@ export type Database = {
         Row: {
           closed_at: string | null
           created_at: string | null
+          current_price: number | null
           entry_price: number
           exit_price: number | null
           id: string
           is_copy_trade: boolean | null
           leverage: number | null
           lot_size: number
+          margin_used: number | null
           market_type: string
           profit_loss: number | null
           status: string | null
           symbol: string
           trade_type: string
           trader_id: string | null
+          unrealized_pnl: number | null
           user_id: string
         }
         Insert: {
           closed_at?: string | null
           created_at?: string | null
+          current_price?: number | null
           entry_price: number
           exit_price?: number | null
           id?: string
           is_copy_trade?: boolean | null
           leverage?: number | null
           lot_size: number
+          margin_used?: number | null
           market_type: string
           profit_loss?: number | null
           status?: string | null
           symbol: string
           trade_type: string
           trader_id?: string | null
+          unrealized_pnl?: number | null
           user_id: string
         }
         Update: {
           closed_at?: string | null
           created_at?: string | null
+          current_price?: number | null
           entry_price?: number
           exit_price?: number | null
           id?: string
           is_copy_trade?: boolean | null
           leverage?: number | null
           lot_size?: number
+          margin_used?: number | null
           market_type?: string
           profit_loss?: number | null
           status?: string | null
           symbol?: string
           trade_type?: string
           trader_id?: string | null
+          unrealized_pnl?: number | null
           user_id?: string
         }
         Relationships: [
@@ -517,6 +526,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_trade_price: {
+        Args: { new_current_price: number; trade_id: string }
+        Returns: undefined
       }
     }
     Enums: {

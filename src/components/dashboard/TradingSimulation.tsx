@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { TrendingUp, TrendingDown, Activity, DollarSign, Clock } from 'lucide-react';
+import TradingMetrics from './TradingMetrics';
 
 const TradingSimulation = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -69,6 +70,22 @@ const TradingSimulation = () => {
   const executeTrade = async () => {
     if (!user || tradeForm.entryPrice <= 0 || tradeForm.lotSize <= 0) return;
 
+    // Calculate margin required
+    const tradeValue = tradeForm.entryPrice * tradeForm.lotSize;
+    const marginRequired = tradeValue / tradeForm.leverage;
+
+    // Check if user has enough balance
+    const currentBalance = profile?.balance || 0;
+    if (marginRequired > currentBalance) {
+      toast({
+        title: 'Insufficient Balance',
+        description: `You need at least $${marginRequired.toFixed(2)} to open this trade.`,
+        variant: 'destructive'
+      });
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -80,12 +97,21 @@ const TradingSimulation = () => {
           trade_type: tradeForm.tradeType,
           market_type: tradeForm.marketType,
           entry_price: tradeForm.entryPrice,
+          current_price: tradeForm.entryPrice,
           lot_size: tradeForm.lotSize,
           leverage: tradeForm.leverage,
+          margin_used: marginRequired,
+          unrealized_pnl: 0,
           status: 'open'
         });
 
       if (error) throw error;
+
+      // Deduct margin from balance
+      await supabase
+        .from('profiles')
+        .update({ balance: currentBalance - marginRequired })
+        .eq('user_id', user.id);
 
       toast({
         title: 'Trade Executed',
@@ -112,17 +138,18 @@ const TradingSimulation = () => {
     setIsLoading(false);
   };
 
-  const closeTrade = async (tradeId: string, currentPrice: number, entryPrice: number, tradeType: string, lotSize: number) => {
+  const closeTrade = async (tradeId: string, currentPrice: number, entryPrice: number, tradeType: string, lotSize: number, leverage: number, marginUsed: number) => {
     try {
-      // Calculate profit/loss
+      // Calculate profit/loss with leverage
       const priceDiff = tradeType === 'buy' ? (currentPrice - entryPrice) : (entryPrice - currentPrice);
-      const profitLoss = priceDiff * lotSize;
+      const profitLoss = priceDiff * lotSize * leverage;
 
       const { error } = await supabase
         .from('trades')
         .update({
           exit_price: currentPrice,
           profit_loss: profitLoss,
+          current_price: currentPrice,
           status: 'closed',
           closed_at: new Date().toISOString()
         })
@@ -130,11 +157,13 @@ const TradingSimulation = () => {
 
       if (error) throw error;
 
-      // Update demo balance
-      const newDemoBalance = (profile?.demo_balance || 0) + profitLoss;
+      // Return margin and apply P&L to balance
+      const currentBalance = profile?.balance || 0;
+      const newBalance = currentBalance + marginUsed + profitLoss;
+      
       await supabase
         .from('profiles')
-        .update({ demo_balance: newDemoBalance })
+        .update({ balance: newBalance })
         .eq('user_id', user?.id);
 
       toast({
@@ -157,6 +186,9 @@ const TradingSimulation = () => {
 
   return (
     <div className="space-y-6">
+      {/* Trading Metrics */}
+      <TradingMetrics />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trading Form */}
         <Card className="lg:col-span-1 card-glass">
@@ -330,7 +362,9 @@ const TradingSimulation = () => {
                             mockPrices[trade.symbol as keyof typeof mockPrices],
                             parseFloat(trade.entry_price),
                             trade.trade_type,
-                            parseFloat(trade.lot_size)
+                            parseFloat(trade.lot_size),
+                            trade.leverage,
+                            parseFloat(trade.margin_used) || 0
                           )}
                         >
                           Close Trade

@@ -25,6 +25,7 @@ import Deposits from '@/components/dashboard/Deposits';
 import Withdrawals from '@/components/dashboard/Withdrawals';
 import KYCVerification from '@/components/dashboard/KYCVerification';
 import Profile from '@/components/dashboard/Profile';
+import Notifications from '@/components/dashboard/Notifications';
 
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
@@ -160,13 +161,14 @@ const Dashboard = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="trading" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
             <TabsTrigger value="trading">Trading</TabsTrigger>
             <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
             <TabsTrigger value="investments">Investments</TabsTrigger>
             <TabsTrigger value="deposits">Deposits</TabsTrigger>
             <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
             <TabsTrigger value="kyc">KYC</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -192,6 +194,10 @@ const Dashboard = () => {
 
           <TabsContent value="kyc" className="mt-6">
             <KYCVerification />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="mt-6">
+            <Notifications />
           </TabsContent>
 
           <TabsContent value="profile" className="mt-6">
