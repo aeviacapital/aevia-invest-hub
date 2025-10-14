@@ -36,9 +36,45 @@ const TradingSimulation = () => {
   };
 
   useEffect(() => {
-    fetchTrades();
-    setTradeForm(prev => ({ ...prev, entryPrice: mockPrices[prev.symbol as keyof typeof mockPrices] }));
+    if (user) {
+      fetchTrades();
+      setTradeForm(prev => ({ ...prev, entryPrice: mockPrices[prev.symbol as keyof typeof mockPrices] }));
+    }
   }, [user]);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/tv.js';
+    script.async = true;
+    script.onload = () => initTradingViewChart();
+    document.body.appendChild(script);
+
+    return () => {
+      const existingScript = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+    };
+  }, []);
+
+  const initTradingViewChart = () => {
+    if (typeof (window as any).TradingView !== 'undefined') {
+      new (window as any).TradingView.widget({
+        width: '100%',
+        height: 500,
+        symbol: 'BINANCE:BTCUSDT',
+        interval: '1',
+        timezone: 'Etc/UTC',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        toolbar_bg: '#1a1a1a',
+        enable_publishing: false,
+        allow_symbol_change: true,
+        container_id: 'tradingview_chart',
+      });
+    }
+  };
 
   const fetchTrades = async () => {
     if (!user) return;
@@ -295,7 +331,7 @@ const TradingSimulation = () => {
           </CardContent>
         </Card>
 
-        {/* TradingView Chart Placeholder */}
+        {/* TradingView Chart */}
         <Card className="lg:col-span-2 card-glass">
           <CardHeader>
             <CardTitle>Live Chart</CardTitle>
@@ -304,15 +340,7 @@ const TradingSimulation = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-96 bg-muted/20 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <Activity className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-lg font-medium">TradingView Chart</p>
-                <p className="text-muted-foreground">
-                  Integration with TradingView widget for {tradeForm.symbol}
-                </p>
-              </div>
-            </div>
+            <div id="tradingview_chart" className="h-[500px]" />
           </CardContent>
         </Card>
       </div>

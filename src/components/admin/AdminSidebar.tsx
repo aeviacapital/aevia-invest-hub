@@ -1,4 +1,4 @@
-import { Users, CreditCard, Banknote, Shield, TrendingUp, Settings, Bell, BarChart3 } from 'lucide-react';
+import { Users, CreditCard, Banknote, Shield, TrendingUp, Settings, Bell, BarChart3, FileText } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ const adminItems = [
   { id: 'kyc', title: 'KYC Verification', icon: Shield },
   { id: 'investments', title: 'Investments', icon: TrendingUp },
   { id: 'traders', title: 'Traders', icon: BarChart3 },
+  { id: 'loans', title: 'Loans', icon: FileText },
   { id: 'notifications', title: 'Notifications', icon: Bell },
   { id: 'settings', title: 'Settings', icon: Settings },
 ];

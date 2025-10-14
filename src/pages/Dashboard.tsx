@@ -26,12 +26,12 @@ import Withdrawals from '@/components/dashboard/Withdrawals';
 import KYCVerification from '@/components/dashboard/KYCVerification';
 import Profile from '@/components/dashboard/Profile';
 import Notifications from '@/components/dashboard/Notifications';
+import { Loans } from '@/components/dashboard/Loans';
 
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
   const [stats, setStats] = useState({
     balance: 0,
-    demoBalance: 0,
     totalInvestments: 0,
     activeInvestments: 0,
     totalTrades: 0,
@@ -62,7 +62,6 @@ const Dashboard = () => {
 
       setStats({
         balance: profile?.balance || 0,
-        demoBalance: profile?.demo_balance || 10000,
         totalInvestments,
         activeInvestments,
         totalTrades,
@@ -101,30 +100,17 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="card-glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Real Balance</CardTitle>
+              <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
               <DollarSign className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
                 ${stats.balance.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">Available for withdrawal</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card-glass">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Demo Balance</CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                ${stats.demoBalance.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">Practice trading</p>
+              <p className="text-xs text-muted-foreground">Available for trading</p>
             </CardContent>
           </Card>
 
@@ -161,16 +147,19 @@ const Dashboard = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="trading" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="trading">Trading</TabsTrigger>
-            <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
-            <TabsTrigger value="investments">Investments</TabsTrigger>
-            <TabsTrigger value="deposits">Deposits</TabsTrigger>
-            <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
-            <TabsTrigger value="kyc">KYC</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 pb-2">
+            <TabsList className="inline-flex min-w-full md:min-w-0 w-max">
+              <TabsTrigger value="trading">Trading</TabsTrigger>
+              <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
+              <TabsTrigger value="investments">Investments</TabsTrigger>
+              <TabsTrigger value="deposits">Deposits</TabsTrigger>
+              <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
+              <TabsTrigger value="loans">Loans</TabsTrigger>
+              <TabsTrigger value="kyc">KYC</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="trading" className="mt-6">
             <TradingSimulation />
@@ -198,6 +187,10 @@ const Dashboard = () => {
 
           <TabsContent value="notifications" className="mt-6">
             <Notifications />
+          </TabsContent>
+
+          <TabsContent value="loans" className="mt-6">
+            <Loans />
           </TabsContent>
 
           <TabsContent value="profile" className="mt-6">

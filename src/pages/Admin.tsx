@@ -10,6 +10,7 @@ import { AdminInvestments } from '@/components/admin/AdminInvestments';
 import { AdminSettings } from '@/components/admin/AdminSettings';
 import AdminNotifications from '@/components/admin/AdminNotifications';
 import AdminTraders from '@/components/admin/AdminTraders';
+import { AdminLoans } from '@/components/admin/AdminLoans';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Admin = () => {
@@ -73,6 +74,9 @@ const Admin = () => {
                 </TabsContent>
                 <TabsContent value="traders">
                   <AdminTraders />
+                </TabsContent>
+                <TabsContent value="loans">
+                  <AdminLoans />
                 </TabsContent>
               </Tabs>
             </div>

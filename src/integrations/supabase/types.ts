@@ -205,6 +205,66 @@ export type Database = {
         }
         Relationships: []
       }
+      loans: {
+        Row: {
+          approved_at: string | null
+          collateral: string | null
+          created_at: string | null
+          credit_requirements: string | null
+          default_terms: string | null
+          disbursement_details: string | null
+          fees_charges: number | null
+          id: string
+          interest_rate: number
+          loan_agreement: string | null
+          loan_term_months: number
+          loan_type: string
+          principal_amount: number
+          repayment_schedule: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          collateral?: string | null
+          created_at?: string | null
+          credit_requirements?: string | null
+          default_terms?: string | null
+          disbursement_details?: string | null
+          fees_charges?: number | null
+          id?: string
+          interest_rate: number
+          loan_agreement?: string | null
+          loan_term_months: number
+          loan_type: string
+          principal_amount: number
+          repayment_schedule: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          collateral?: string | null
+          created_at?: string | null
+          credit_requirements?: string | null
+          default_terms?: string | null
+          disbursement_details?: string | null
+          fees_charges?: number | null
+          id?: string
+          interest_rate?: number
+          loan_agreement?: string | null
+          loan_term_months?: number
+          loan_type?: string
+          principal_amount?: number
+          repayment_schedule?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -242,7 +302,6 @@ export type Database = {
           country: string | null
           created_at: string | null
           date_of_birth: string | null
-          demo_balance: number | null
           email: string
           full_name: string | null
           id: string
@@ -259,7 +318,6 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           date_of_birth?: string | null
-          demo_balance?: number | null
           email: string
           full_name?: string | null
           id?: string
@@ -276,7 +334,6 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           date_of_birth?: string | null
-          demo_balance?: number | null
           email?: string
           full_name?: string | null
           id?: string
