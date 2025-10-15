@@ -41,17 +41,36 @@ export const AdminInvestments = () => {
 
   const fetchInvestments = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch investments
+      const { data: investmentsData, error: investmentsError } = await supabase
         .from('user_investments')
-        .select(`
-          *,
-          profiles!inner(full_name, email),
-          investment_plans!inner(title, investment_type)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setInvestments(data || []);
+      if (investmentsError) throw investmentsError;
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email');
+
+      if (profilesError) throw profilesError;
+
+      // Fetch investment plans separately
+      const { data: plansData, error: plansError } = await supabase
+        .from('investment_plans')
+        .select('id, title, investment_type');
+
+      if (plansError) throw plansError;
+
+      // Combine the data
+      const investmentsWithDetails = investmentsData?.map(investment => ({
+        ...investment,
+        profiles: profilesData?.find(profile => profile.user_id === investment.user_id),
+        investment_plans: plansData?.find(plan => plan.id === investment.plan_id)
+      })) || [];
+
+      setInvestments(investmentsWithDetails);
     } catch (error) {
       console.error('Error fetching investments:', error);
       toast({

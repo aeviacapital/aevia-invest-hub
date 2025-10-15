@@ -41,16 +41,28 @@ export const AdminDeposits = () => {
 
   const fetchDeposits = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch deposits
+      const { data: depositsData, error: depositsError } = await supabase
         .from('deposits')
-        .select(`
-          *,
-          profiles!inner(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setDeposits(data || []);
+      if (depositsError) throw depositsError;
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email');
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const depositsWithProfiles = depositsData?.map(deposit => ({
+        ...deposit,
+        profiles: profilesData?.find(profile => profile.user_id === deposit.user_id)
+      })) || [];
+
+      setDeposits(depositsWithProfiles);
     } catch (error) {
       console.error('Error fetching deposits:', error);
       toast({

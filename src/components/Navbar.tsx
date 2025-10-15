@@ -3,12 +3,14 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/hooks/useRole";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin } = useRole();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   const navItems = [
     { name: "Home", href: "#home" },
@@ -46,7 +48,7 @@ const Navbar = () => {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
+            {user && !isHomePage ? (
               <>
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm">
@@ -104,7 +106,7 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="flex flex-col space-y-2 px-3 pt-4">
-                {user ? (
+                {user && !isHomePage ? (
                   <>
                     <Link to="/dashboard">
                       <Button variant="outline" size="sm" className="w-full">

@@ -23,17 +23,17 @@ const Admin = () => {
         <div className="flex min-h-screen w-full">
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           
-          <main className="flex-1">
+          <main className="flex-1 overflow-x-hidden">
             {/* Header */}
             <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-              <div className="flex items-center justify-between px-6 h-full">
-                <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between px-4 md:px-6 h-full">
+                <div className="flex items-center gap-2 md:gap-4">
                   <SidebarTrigger />
                   <div>
-                    <h1 className="text-xl font-semibold text-gradient-primary">
+                    <h1 className="text-base md:text-xl font-semibold text-gradient-primary">
                       Admin Dashboard
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
                       Manage your platform
                     </p>
                   </div>
@@ -41,7 +41,7 @@ const Admin = () => {
                 
                 <button
                   onClick={signOut}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-xs md:text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Sign Out
                 </button>
@@ -49,7 +49,7 @@ const Admin = () => {
             </header>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsContent value="users">
                   <AdminUsers />

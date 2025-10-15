@@ -53,16 +53,28 @@ export const AdminKYC = () => {
 
   const fetchKycDocuments = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch KYC documents
+      const { data: kycData, error: kycError } = await supabase
         .from('kyc_documents')
-        .select(`
-          *,
-          profiles!inner(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setKycDocuments(data || []);
+      if (kycError) throw kycError;
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, kyc_status');
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const documentsWithProfiles = kycData?.map(doc => ({
+        ...doc,
+        profiles: profilesData?.find(profile => profile.user_id === doc.user_id)
+      })) || [];
+
+      setKycDocuments(documentsWithProfiles);
     } catch (error) {
       console.error('Error fetching KYC documents:', error);
       toast({

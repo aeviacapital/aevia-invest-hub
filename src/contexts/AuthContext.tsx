@@ -148,10 +148,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setUser(null);
+    setSession(null);
     toast({
       title: 'Signed out',
       description: 'You have been successfully signed out.',
     });
+    window.location.href = '/';
   };
 
   const value = {

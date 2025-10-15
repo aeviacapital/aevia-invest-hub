@@ -53,16 +53,28 @@ export const AdminWithdrawals = () => {
 
   const fetchWithdrawals = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch withdrawals
+      const { data: withdrawalsData, error: withdrawalsError } = await supabase
         .from('withdrawals')
-        .select(`
-          *,
-          profiles!inner(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setWithdrawals(data || []);
+      if (withdrawalsError) throw withdrawalsError;
+
+      // Fetch profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email');
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const withdrawalsWithProfiles = withdrawalsData?.map(withdrawal => ({
+        ...withdrawal,
+        profiles: profilesData?.find(profile => profile.user_id === withdrawal.user_id)
+      })) || [];
+
+      setWithdrawals(withdrawalsWithProfiles);
     } catch (error) {
       console.error('Error fetching withdrawals:', error);
       toast({
