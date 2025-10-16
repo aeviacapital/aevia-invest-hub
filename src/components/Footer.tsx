@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Twitter, Mail, MapPin, MessageCircle } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -31,10 +31,9 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: Facebook, href: "#", label: "Facebook" },
-    { icon: Twitter, href: "#", label: "Twitter" },
-    { icon: Linkedin, href: "#", label: "LinkedIn" },
-    { icon: Instagram, href: "#", label: "Instagram" }
+    { icon: Facebook, href: "https://www.facebook.com/share/1F96kCxdTj/", label: "Facebook" },
+    { icon: Twitter, href: "https://x.com/Aeviacapital?t=ljAlEjGh9aPZdJjCGtA-ig&s=09", label: "X (Twitter)" },
+    { icon: MessageCircle, href: "https://wa.me/447946189968", label: "WhatsApp" }
   ];
 
   return (
@@ -65,12 +64,14 @@ const Footer = () => {
                   <span>support@aeviacapital.com</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
-                  <Phone className="w-4 h-4 mr-3 text-primary" />
-                  <span>+1 (555) 123-4567</span>
+                  <MessageCircle className="w-4 h-4 mr-3 text-primary" />
+                  <a href="https://wa.me/447946189968" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    +44 7946 189968
+                  </a>
                 </div>
-                <div className="flex items-center text-muted-foreground">
-                  <MapPin className="w-4 h-4 mr-3 text-primary" />
-                  <span>New York, NY 10001, USA</span>
+                <div className="flex items-start text-muted-foreground">
+                  <MapPin className="w-4 h-4 mr-3 mt-0.5 text-primary flex-shrink-0" />
+                  <span>C/O Ashley King Ltd, 68 St. Margarets Road, Edgware, England, HA8 9UU</span>
                 </div>
               </div>
 
@@ -80,6 +81,8 @@ const Footer = () => {
                   <a
                     key={social.label}
                     href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-10 h-10 bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
                     aria-label={social.label}
                   >

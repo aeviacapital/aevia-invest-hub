@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, UserCheck, UserX, Eye } from 'lucide-react';
+import { Search, UserCheck, UserX, Eye, Edit } from 'lucide-react';
+import { AdminEditUser } from './AdminEditUser';
 
 export const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -28,6 +29,7 @@ export const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -223,6 +225,14 @@ export const AdminUsers = () => {
                     <TableCell>${user.balance?.toFixed(2) || '0.00'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingUser(user)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
                         {!user.is_verified ? (
                           <Button
                             size="sm"
@@ -256,6 +266,15 @@ export const AdminUsers = () => {
           )}
         </CardContent>
       </Card>
+
+      {editingUser && (
+        <AdminEditUser
+          user={editingUser}
+          open={!!editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={fetchUsers}
+        />
+      )}
     </div>
   );
 };

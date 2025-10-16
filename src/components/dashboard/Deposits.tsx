@@ -21,11 +21,11 @@ const Deposits = () => {
     transactionHash: ''
   });
 
-  // Mock wallet addresses (in real app, these would be generated dynamically)
+  // Production wallet addresses
   const walletAddresses = {
-    BTC: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-    USDT: '0x742d35Cc6634C0532925a3b8D93B5b448D3e542d',
-    SOL: 'DWvDTSgzQyE7QHmGPgKyzHyDn8J5kJ2Qw8jR2M5F9RWU'
+    BTC: 'bc1qpg3mrcr4l5dussa0pjfw2prcrhyq9znfqwd9la',
+    USDT: 'TYtHKd8YPfAYXssEsC2Ztn5yXdta57paJq',
+    SOL: 'FtPMsBLFF1Z2zorehNuvoV9pL7HdQ2qPRbWNUnxCQ5qT'
   };
 
   useEffect(() => {

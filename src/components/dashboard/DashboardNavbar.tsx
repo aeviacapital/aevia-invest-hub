@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +12,57 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Settings, User, Bell, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { NotificationsPanel } from './NotificationsPanel';
+import { supabase } from '@/integrations/supabase/client';
 
 const DashboardNavbar = () => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      subscribeToNotifications();
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false);
+
+    setUnreadCount(count || 0);
+  };
+
+  const subscribeToNotifications = () => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('notification-count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -59,9 +106,27 @@ const DashboardNavbar = () => {
             </div>
 
             {/* Notifications */}
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative"
+              onClick={() => setNotificationsPanelOpen(true)}
+            >
               <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
             </Button>
+
+            <NotificationsPanel 
+              open={notificationsPanelOpen}
+              onClose={() => setNotificationsPanelOpen(false)}
+            />
 
             {/* User Menu */}
             <DropdownMenu>

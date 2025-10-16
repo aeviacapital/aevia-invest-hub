@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          target_id: string | null
+          target_table: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          target_id?: string | null
+          target_table?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          target_id?: string | null
+          target_table?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       copy_trading: {
         Row: {
           copy_amount: number
@@ -267,28 +306,34 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_link: string | null
           created_at: string | null
           id: string
           is_read: boolean | null
           message: string
+          sent_by: string | null
           title: string
           type: string
           user_id: string
         }
         Insert: {
+          action_link?: string | null
           created_at?: string | null
           id?: string
           is_read?: boolean | null
           message: string
+          sent_by?: string | null
           title: string
           type: string
           user_id: string
         }
         Update: {
+          action_link?: string | null
           created_at?: string | null
           id?: string
           is_read?: boolean | null
           message?: string
+          sent_by?: string | null
           title?: string
           type?: string
           user_id?: string
