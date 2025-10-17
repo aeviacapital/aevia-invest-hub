@@ -114,6 +114,16 @@ const Navbar = () => {
                   {item.name}
                 </a>
               ))}
+              <a
+                href="https://wa.me/447946189968"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center px-3 py-2 text-muted-foreground hover:text-primary transition-smooth"
+                onClick={() => setIsOpen(false)}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                WhatsApp Support
+              </a>
               <div className="flex flex-col space-y-2 px-3 pt-4">
                 {user && !isHomePage ? (
                   <>

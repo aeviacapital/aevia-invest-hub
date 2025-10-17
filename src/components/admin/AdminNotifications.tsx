@@ -47,16 +47,27 @@ const AdminNotifications = () => {
       return;
     }
 
+    // Validate notification type
+    const validTypes = ['info', 'success', 'warning', 'error'];
+    if (!validTypes.includes(notificationForm.type)) {
+      toast({
+        title: 'Error',
+        description: 'Invalid notification type. Must be: info, success, warning, or error',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const baseNotification = {
-        title: notificationForm.title,
-        message: notificationForm.message,
+        title: notificationForm.title.trim(),
+        message: notificationForm.message.trim(),
         type: notificationForm.type,
         is_read: false,
         sent_by: adminUser?.id,
-        action_link: notificationForm.actionLink || null,
+        action_link: notificationForm.actionLink?.trim() || null,
       };
 
       if (notificationForm.recipient === 'single') {
@@ -182,8 +193,12 @@ const AdminNotifications = () => {
                 <SelectItem value="info">Info</SelectItem>
                 <SelectItem value="success">Success</SelectItem>
                 <SelectItem value="warning">Warning</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Valid types: info, success, warning, error
+            </p>
           </div>
 
           <div className="space-y-2">

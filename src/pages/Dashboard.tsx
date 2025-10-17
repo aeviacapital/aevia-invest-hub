@@ -147,17 +147,17 @@ const Dashboard = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="trading" className="w-full">
-          <div className="overflow-x-auto -mx-4 px-4 pb-2">
-            <TabsList className="inline-flex min-w-full md:min-w-0 w-max">
-              <TabsTrigger value="trading">Trading</TabsTrigger>
-              <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
-              <TabsTrigger value="investments">Investments</TabsTrigger>
-              <TabsTrigger value="deposits">Deposits</TabsTrigger>
-              <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
-              <TabsTrigger value="loans">Loans</TabsTrigger>
-              <TabsTrigger value="kyc">KYC</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
+          <div className="w-full overflow-x-auto -mx-4 px-4 pb-2">
+            <TabsList className="w-full flex justify-start md:justify-center">
+              <TabsTrigger value="trading" className="flex-shrink-0">Trading</TabsTrigger>
+              <TabsTrigger value="copy-trading" className="flex-shrink-0">Copy Trading</TabsTrigger>
+              <TabsTrigger value="investments" className="flex-shrink-0">Investments</TabsTrigger>
+              <TabsTrigger value="deposits" className="flex-shrink-0">Deposits</TabsTrigger>
+              <TabsTrigger value="withdrawals" className="flex-shrink-0">Withdrawals</TabsTrigger>
+              <TabsTrigger value="loans" className="flex-shrink-0">Loans</TabsTrigger>
+              <TabsTrigger value="kyc" className="flex-shrink-0">KYC</TabsTrigger>
+              <TabsTrigger value="notifications" className="flex-shrink-0">Notifications</TabsTrigger>
+              <TabsTrigger value="profile" className="flex-shrink-0">Profile</TabsTrigger>
             </TabsList>
           </div>
 

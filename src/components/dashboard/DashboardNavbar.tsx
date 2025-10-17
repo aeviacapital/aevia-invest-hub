@@ -25,6 +25,7 @@ const DashboardNavbar = () => {
     if (user) {
       fetchUnreadCount();
       subscribeToNotifications();
+      subscribeToProfileUpdates();
     }
   }, [user]);
 
@@ -55,6 +56,30 @@ const DashboardNavbar = () => {
         },
         () => {
           fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const subscribeToProfileUpdates = () => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          window.location.reload();
         }
       )
       .subscribe();

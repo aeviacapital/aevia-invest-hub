@@ -78,6 +78,14 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
       // Log audit trail
       await logAuditAction('update_user_profile', oldValues, newValues);
 
+      // Trigger a profiles update event for real-time sync
+      const channel = supabase.channel('profile-updates');
+      channel.send({
+        type: 'broadcast',
+        event: 'profile_updated',
+        payload: { user_id: user.user_id, updates }
+      });
+
       toast({
         title: 'Success',
         description: 'User profile updated successfully',
