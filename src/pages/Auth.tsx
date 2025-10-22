@@ -14,7 +14,8 @@ const Auth = () => {
     email: '',
     password: '',
     fullName: '',
-    invitationCode: ''
+    invitationCode: '',
+    referralCode: ''
   });
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -26,7 +27,14 @@ const Auth = () => {
     if (user) {
       navigate(from, { replace: true });
     }
-  }, [user, navigate, from]);
+
+    // Check for referral code in URL
+    const params = new URLSearchParams(location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+    }
+  }, [user, navigate, from, location]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -56,7 +64,8 @@ const Auth = () => {
       formData.email, 
       formData.password, 
       formData.fullName,
-      formData.invitationCode
+      formData.invitationCode,
+      formData.referralCode
     );
     
     if (error) {
@@ -187,6 +196,17 @@ const Auth = () => {
                       value={formData.invitationCode}
                       onChange={handleInputChange}
                       required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="referral-code">Referral Code (Optional)</Label>
+                    <Input
+                      id="referral-code"
+                      name="referralCode"
+                      type="text"
+                      placeholder="Enter referral code if you have one"
+                      value={formData.referralCode}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <Button 

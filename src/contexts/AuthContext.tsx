@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName: string, invitationCode: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, invitationCode: string, referralCode?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isLoading: boolean;
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, invitationCode: string) => {
+  const signUp = async (email: string, password: string, fullName: string, invitationCode: string, referralCode?: string) => {
     try {
       // Verify invitation code
       const { data: codeData, error: codeError } = await supabase
@@ -92,9 +92,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: { message: 'Invalid or expired invitation code' } };
       }
 
+      // Verify referral code if provided
+      let referrerId = null;
+      if (referralCode) {
+        const { data: referrerData, error: referrerError } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('referral_code', referralCode)
+          .single();
+
+        if (!referrerError && referrerData) {
+          referrerId = referrerData.user_id;
+        }
+      }
+
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -106,12 +120,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
-      if (!error) {
+      if (!error && data.user) {
         // Mark invitation code as used
         await supabase
           .from('invitation_codes')
           .update({ is_used: true, used_at: new Date().toISOString() })
           .eq('id', codeData.id);
+
+        // If there's a referrer, create referral record and update profile
+        if (referrerId) {
+          await supabase
+            .from('profiles')
+            .update({ referred_by: referrerId })
+            .eq('user_id', data.user.id);
+
+          await supabase
+            .from('referrals')
+            .insert({
+              referrer_id: referrerId,
+              referred_id: data.user.id,
+            });
+        }
 
         toast({
           title: 'Success',

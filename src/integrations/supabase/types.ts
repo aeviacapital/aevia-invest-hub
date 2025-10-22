@@ -354,6 +354,8 @@ export type Database = {
           is_verified: boolean | null
           kyc_status: string | null
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
           updated_at: string | null
           user_id: string
         }
@@ -370,6 +372,8 @@ export type Database = {
           is_verified?: boolean | null
           kyc_status?: string | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -386,8 +390,37 @@ export type Database = {
           is_verified?: boolean | null
           kyc_status?: string | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          bonus_earned: number | null
+          created_at: string | null
+          first_investment_made: boolean | null
+          id: string
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          bonus_earned?: number | null
+          created_at?: string | null
+          first_investment_made?: boolean | null
+          id?: string
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          bonus_earned?: number | null
+          created_at?: string | null
+          first_investment_made?: boolean | null
+          id?: string
+          referred_id?: string
+          referrer_id?: string
         }
         Relationships: []
       }

@@ -27,6 +27,7 @@ import KYCVerification from '@/components/dashboard/KYCVerification';
 import Profile from '@/components/dashboard/Profile';
 import Notifications from '@/components/dashboard/Notifications';
 import { Loans } from '@/components/dashboard/Loans';
+import Referrals from '@/components/dashboard/Referrals';
 
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
@@ -155,6 +156,7 @@ const Dashboard = () => {
               <TabsTrigger value="deposits" className="flex-shrink-0">Deposits</TabsTrigger>
               <TabsTrigger value="withdrawals" className="flex-shrink-0">Withdrawals</TabsTrigger>
               <TabsTrigger value="loans" className="flex-shrink-0">Loans</TabsTrigger>
+              <TabsTrigger value="referrals" className="flex-shrink-0">Referrals</TabsTrigger>
               <TabsTrigger value="kyc" className="flex-shrink-0">KYC</TabsTrigger>
               <TabsTrigger value="notifications" className="flex-shrink-0">Notifications</TabsTrigger>
               <TabsTrigger value="profile" className="flex-shrink-0">Profile</TabsTrigger>
@@ -191,6 +193,10 @@ const Dashboard = () => {
 
           <TabsContent value="loans" className="mt-6">
             <Loans />
+          </TabsContent>
+
+          <TabsContent value="referrals" className="mt-6">
+            <Referrals />
           </TabsContent>
 
           <TabsContent value="profile" className="mt-6">

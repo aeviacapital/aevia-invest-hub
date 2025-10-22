@@ -6,37 +6,49 @@ import { Building, Droplets, TrendingUp, Clock, DollarSign, Star } from "lucide-
 const InvestmentPlans = () => {
   const plans = [
     {
+      icon: TrendingUp,
+      title: "Starter Plan",
+      description: "Perfect for beginners looking to start their investment journey with consistent daily returns",
+      minDeposit: "$100",
+      maxDeposit: "$9,999",
+      minDepositNum: 100,
+      maxDepositNum: 9999,
+      dailyReturn: "5.9%",
+      duration: "5 days",
+      referralBonus: "10%",
+      riskLevel: "Low",
+      riskColor: "bg-success",
+      features: ["Daily 5.9% returns", "5-day investment cycle", "10% referral bonus", "Low risk entry"]
+    },
+    {
       icon: Building,
-      title: "Premium Real Estate",
-      description: "Diversified real estate portfolio with prime commercial and residential properties",
+      title: "Pro Plan",
+      description: "Advanced investment plan for experienced investors seeking higher returns over a week",
       minDeposit: "$10,000",
-      expectedReturn: "12-18%",
-      duration: "12-24 months",
+      maxDeposit: "$49,999",
+      minDepositNum: 10000,
+      maxDepositNum: 49999,
+      dailyReturn: "9.6%",
+      duration: "7 days",
+      referralBonus: "10%",
       riskLevel: "Medium",
       riskColor: "bg-warning",
-      features: ["Prime locations", "Professional management", "Quarterly returns", "Exit flexibility"]
+      features: ["Daily 9.6% returns", "7-day investment cycle", "10% referral bonus", "Priority support"]
     },
     {
-      icon: Droplets,
-      title: "Oil & Gas Ventures",
-      description: "Strategic investments in established oil fields and gas exploration projects",
-      minDeposit: "$25,000",
-      expectedReturn: "15-25%",
-      duration: "18-36 months",
+      icon: Star,
+      title: "Enterprise Plan",
+      description: "Premium business solution with maximum returns and unlimited investment potential",
+      minDeposit: "$50,000",
+      maxDeposit: "Unlimited",
+      minDepositNum: 50000,
+      maxDepositNum: null,
+      dailyReturn: "20.9%",
+      duration: "4 days",
+      referralBonus: "—",
       riskLevel: "High",
-      riskColor: "bg-destructive",
-      features: ["Proven reserves", "Industry expertise", "Market hedging", "High yield potential"]
-    },
-    {
-      icon: TrendingUp,
-      title: "Crypto Trading Portfolio",
-      description: "Algorithmic trading strategies across major cryptocurrencies with risk management",
-      minDeposit: "$5,000",
-      expectedReturn: "20-40%",
-      duration: "6-12 months",
-      riskLevel: "High",
-      riskColor: "bg-destructive",
-      features: ["24/7 trading", "AI algorithms", "Risk controls", "Real-time monitoring"]
+      riskColor: "bg-primary",
+      features: ["Daily 20.9% returns", "4-day investment cycle", "Dedicated account manager", "Custom solutions"]
     }
   ];
 
@@ -80,27 +92,26 @@ const InvestmentPlans = () => {
               </CardHeader>
 
               <CardContent className="relative z-10">
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-1">
-                      <DollarSign className="w-4 h-4 text-primary" />
-                    </div>
-                    <p className="text-xs text-muted-foreground">Min Deposit</p>
-                    <p className="font-semibold text-sm">{plan.minDeposit}</p>
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Min Investment:</span>
+                    <span className="font-semibold text-sm">{plan.minDeposit}</span>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-1">
-                      <TrendingUp className="w-4 h-4 text-success" />
-                    </div>
-                    <p className="text-xs text-muted-foreground">Returns</p>
-                    <p className="font-semibold text-sm text-success">{plan.expectedReturn}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Max Investment:</span>
+                    <span className="font-semibold text-sm">{plan.maxDeposit}</span>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-1">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <p className="text-xs text-muted-foreground">Duration</p>
-                    <p className="font-semibold text-sm">{plan.duration}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Daily Returns:</span>
+                    <span className="font-semibold text-sm text-success">{plan.dailyReturn}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Duration:</span>
+                    <span className="font-semibold text-sm">{plan.duration}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Referral Bonus:</span>
+                    <span className="font-semibold text-sm text-primary">{plan.referralBonus}</span>
                   </div>
                 </div>
 
@@ -116,8 +127,18 @@ const InvestmentPlans = () => {
                   </ul>
                 </div>
 
-                <Button className="w-full btn-hero group">
-                  Start Investing
+                <Button 
+                  className="w-full btn-hero group"
+                  onClick={() => {
+                    const user = localStorage.getItem('supabase.auth.token');
+                    if (user) {
+                      window.location.href = '/dashboard';
+                    } else {
+                      window.location.href = '/auth';
+                    }
+                  }}
+                >
+                  Invest Now
                   <TrendingUp className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </CardContent>

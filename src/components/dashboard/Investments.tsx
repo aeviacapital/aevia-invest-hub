@@ -56,15 +56,40 @@ const Investments = () => {
     try {
       const plan = investmentPlans.find(p => p.id === planId);
       
-      if (amount < plan.min_deposit) {
-        throw new Error(`Minimum deposit is $${plan.min_deposit.toLocaleString()}`);
+      if (!plan) {
+        throw new Error('Investment plan not found');
       }
 
-      // Calculate end date
+      // Validate investment amount
+      if (amount < parseFloat(plan.min_deposit.toString())) {
+        throw new Error(`Minimum deposit is $${parseFloat(plan.min_deposit.toString()).toLocaleString()}`);
+      }
+
+      // Check user's balance
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profileData || parseFloat(profileData.balance.toString()) < amount) {
+        throw new Error('Insufficient balance. Please deposit funds first.');
+      }
+
+      // Calculate end date based on duration
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + plan.duration_months);
 
-      const { error } = await supabase
+      // Check if this is the user's first investment for referral bonus
+      const { data: existingInvestments } = await supabase
+        .from('user_investments')
+        .select('id')
+        .eq('user_id', user.id);
+
+      const isFirstInvestment = !existingInvestments || existingInvestments.length === 0;
+
+      // Create investment
+      const { error: investError } = await supabase
         .from('user_investments')
         .insert({
           user_id: user.id,
@@ -74,7 +99,55 @@ const Investments = () => {
           end_date: endDate.toISOString()
         });
 
-      if (error) throw error;
+      if (investError) throw investError;
+
+      // Deduct amount from user balance
+      const { error: balanceError } = await supabase
+        .from('profiles')
+        .update({ 
+          balance: parseFloat(profileData.balance.toString()) - amount 
+        })
+        .eq('user_id', user.id);
+
+      if (balanceError) throw balanceError;
+
+      // Handle referral bonus if first investment
+      if (isFirstInvestment) {
+        const { data: profileWithReferrer } = await supabase
+          .from('profiles')
+          .select('referred_by')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileWithReferrer?.referred_by) {
+          const bonusAmount = amount * 0.10; // 10% bonus
+          
+          // Update referral record
+          await supabase
+            .from('referrals')
+            .update({
+              bonus_earned: bonusAmount,
+              first_investment_made: true
+            })
+            .eq('referred_id', user.id);
+
+          // Add bonus to referrer's balance
+          const { data: referrerProfile } = await supabase
+            .from('profiles')
+            .select('balance')
+            .eq('user_id', profileWithReferrer.referred_by)
+            .single();
+
+          if (referrerProfile) {
+            await supabase
+              .from('profiles')
+              .update({ 
+                balance: parseFloat(referrerProfile.balance.toString()) + bonusAmount 
+              })
+              .eq('user_id', profileWithReferrer.referred_by);
+          }
+        }
+      }
 
       toast({
         title: 'Investment Success',
