@@ -23,6 +23,14 @@ import {
 import { Search, UserCheck, UserX, Eye, Edit } from 'lucide-react';
 import { AdminEditUser } from './AdminEditUser';
 
+// Helper for formatting Euro currency properly
+const formatEuro = (amount: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+  }).format(amount);
+
 export const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
@@ -40,35 +48,47 @@ export const AdminUsers = () => {
     filterUsers();
   }, [users, searchTerm, statusFilter]);
 
+  // Fetch all users with their wallets + roles
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
       // Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, full_name, email, kyc_status, is_verified, created_at')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Fetch user roles separately
+      // Fetch user roles
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
-
       if (rolesError) throw rolesError;
 
-      // Combine the data
-      const usersWithRoles = profilesData?.map(profile => ({
-        ...profile,
-        user_roles: rolesData?.filter(role => role.user_id === profile.user_id) || []
-      })) || [];
+      // Fetch wallets
+      const { data: walletsData, error: walletsError } = await supabase
+        .from('wallets')
+        .select('user_id, balance');
+      if (walletsError) throw walletsError;
 
-      setUsers(usersWithRoles);
+      // Merge everything
+      const combined = profilesData.map((profile) => {
+        const userRoles = rolesData.filter((r) => r.user_id === profile.user_id);
+        const wallet = walletsData.find((w) => w.user_id === profile.user_id);
+        return {
+          ...profile,
+          balance: wallet?.balance || 0,
+          user_roles: userRoles,
+        };
+      });
+
+      setUsers(combined);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch users',
+        description: 'Failed to fetch users and wallets',
         variant: 'destructive',
       });
     } finally {
@@ -76,6 +96,7 @@ export const AdminUsers = () => {
     }
   };
 
+  // Filter users by search and status
   const filterUsers = () => {
     let filtered = users;
 
@@ -94,6 +115,7 @@ export const AdminUsers = () => {
     setFilteredUsers(filtered);
   };
 
+  // Update KYC verification status
   const updateUserStatus = async (userId: string, isVerified: boolean) => {
     try {
       const { error } = await supabase
@@ -114,6 +136,36 @@ export const AdminUsers = () => {
       toast({
         title: 'Error',
         description: 'Failed to update user status',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Adjust balance via RPC
+  const adjustUserBalance = async (userId: string, newBalance: number, currentBalance: number) => {
+    const delta = newBalance - currentBalance;
+    if (delta === 0) return;
+
+    try {
+      const { data, error } = await supabase.rpc('admin_adjust_balance', {
+        p_user_id: userId,
+        p_amount: delta,
+        p_reason: 'Admin manual balance adjustment',
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Balance Updated',
+        description: `User balance adjusted successfully`,
+      });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error adjusting balance:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update user balance',
         variant: 'destructive',
       });
     }
@@ -189,7 +241,7 @@ export const AdminUsers = () => {
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow key={user.user_id}>
                     <TableCell>
                       <div>
                         <div className="font-medium">{user.full_name || 'N/A'}</div>
@@ -222,7 +274,7 @@ export const AdminUsers = () => {
                         {user.is_verified ? 'Verified' : 'Unverified'}
                       </Badge>
                     </TableCell>
-                    <TableCell>${user.balance?.toFixed(2) || '0.00'}</TableCell>
+                    <TableCell>{formatEuro(user.balance)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
@@ -278,3 +330,4 @@ export const AdminUsers = () => {
     </div>
   );
 };
+

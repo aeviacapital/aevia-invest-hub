@@ -20,7 +20,7 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
-    balance: user?.balance || 0,
+    balance: user?.wallet_balance || 0, // use wallet balance from joined query
   });
 
   const logAuditAction = async (action: string, oldValue: any, newValue: any) => {
@@ -30,8 +30,8 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
       admin_id: adminUser.id,
       action_type: action,
       target_user_id: user.user_id,
-      target_table: 'profiles',
-      target_id: user.id,
+      target_table: 'wallets',
+      target_id: user.user_id,
       old_value: oldValue,
       new_value: newValue,
       description: `Admin ${action} for user ${user.email}`,
@@ -47,51 +47,56 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
       const oldValues: any = {};
       const newValues: any = {};
 
+      // full name updates stay in profiles
       if (formData.full_name !== user.full_name) {
-        updates.full_name = formData.full_name;
+        const { error } = await supabase
+          .from('profiles')
+          .update({ full_name: formData.full_name })
+          .eq('user_id', user.user_id);
+
+        if (error) throw error;
+
         oldValues.full_name = user.full_name;
         newValues.full_name = formData.full_name;
       }
 
-      if (parseFloat(formData.balance.toString()) !== parseFloat(user.balance)) {
-        updates.balance = formData.balance;
-        oldValues.balance = user.balance;
+      // balance update via RPC
+      if (parseFloat(formData.balance.toString()) !== parseFloat(user.wallet_balance || 0)) {
+        const { data, error } = await supabase.rpc('update_wallet_balance', {
+          p_user_id: user.user_id,
+          p_new_balance: formData.balance,
+        });
+
+        if (error) throw error;
+
+        oldValues.balance = user.wallet_balance;
         newValues.balance = formData.balance;
       }
 
-      if (Object.keys(updates).length === 0) {
+      if (Object.keys(oldValues).length === 0) {
         toast({
           title: 'No Changes',
-          description: 'No changes were made to the user profile.',
+          description: 'No changes were made.',
         });
         setIsLoading(false);
         return;
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', user.user_id);
-
-      if (error) throw error;
-
-      // Log audit trail
-      await logAuditAction('update_user_profile', oldValues, newValues);
-
-      // Note: Profile updates are automatically detected via Postgres realtime
-      // The DashboardNavbar already subscribes to profile changes and will reload
+      // audit log
+      await logAuditAction('update_user_wallet', oldValues, newValues);
 
       toast({
         title: 'Success',
-        description: 'User profile updated successfully',
+        description: 'User data updated successfully.',
       });
 
       onSuccess();
       onClose();
     } catch (error: any) {
+      console.error(error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to update user.',
         variant: 'destructive',
       });
     } finally {
@@ -105,7 +110,7 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Make changes to {user?.email}'s profile. All changes are logged.
+            Manage {user?.email}'s profile and wallet balance. Changes are logged.
           </DialogDescription>
         </DialogHeader>
 
@@ -121,14 +126,14 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="balance">Account Balance ($)</Label>
+            <Label htmlFor="balance">Wallet Balance (€)</Label>
             <Input
               id="balance"
               type="number"
               step="0.01"
               value={formData.balance}
               onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
-              placeholder="Enter balance"
+              placeholder="Enter wallet balance"
             />
           </div>
 
@@ -145,3 +150,4 @@ export const AdminEditUser = ({ user, open, onClose, onSuccess }: AdminEditUserP
     </Dialog>
   );
 };
+

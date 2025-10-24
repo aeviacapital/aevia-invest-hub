@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, DollarSign, Target, Percent, Activity } from 'lucide-react';
+import { DollarSign, Activity, Target, TrendingUp, Percent } from 'lucide-react';
 
-const TradingMetrics = () => {
-  const { user, profile } = useAuth();
+interface Trade {
+  id: string;
+  symbol: string;
+  trade_type: string;
+  entry_price: number;
+  lot_size: number;
+  leverage: number;
+  status?: string;
+}
+
+interface TradingMetricsProps {
+  trades: Trade[];
+  walletBalance: number | null;
+  prices: Record<string, number>;
+}
+
+const TradingMetrics: React.FC<TradingMetricsProps> = ({ trades, walletBalance, prices }) => {
   const [metrics, setMetrics] = useState({
     equity: 0,
     floatingPNL: 0,
@@ -15,53 +28,54 @@ const TradingMetrics = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      calculateMetrics();
-      const interval = setInterval(calculateMetrics, 5000); // Update every 5 seconds
-      return () => clearInterval(interval);
+    if (!trades || trades.length === 0 || walletBalance === null) {
+      setMetrics({
+        equity: walletBalance || 0,
+        floatingPNL: 0,
+        margin: 0,
+        freeMargin: walletBalance || 0,
+        marginLevel: 0
+      });
+      return;
     }
-  }, [user, profile]);
 
-  const calculateMetrics = async () => {
-    if (!user) return;
+    const openTrades = trades.filter(t => t.status === 'open');
 
-    // Fetch open trades
-    const { data: trades } = await supabase
-      .from('trades')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'open');
+    // --- Floating P&L computation from live prices ---
+    let totalFloatingPNL = 0;
+    let totalMarginUsed = 0;
 
-    const openTrades = trades || [];
-    
-    // Calculate floating P&L from unrealized_pnl
-    const floatingPNL = openTrades.reduce((sum, trade) => 
-      sum + (parseFloat(trade.unrealized_pnl?.toString() || '0') || 0), 0
-    );
+    for (const trade of openTrades) {
+      const currentPrice = prices[trade.symbol];
+      if (!currentPrice) continue;
 
-    // Calculate margin used (sum of all margin_used)
-    const margin = openTrades.reduce((sum, trade) => 
-      sum + (parseFloat(trade.margin_used?.toString() || '0') || 0), 0
-    );
+      const priceDiff =
+        trade.trade_type === 'buy'
+          ? currentPrice - trade.entry_price
+          : trade.entry_price - currentPrice;
 
-    // Balance + floating P&L
-    const balance = profile?.balance || 0;
-    const equity = balance + floatingPNL;
+      const pnl = priceDiff * trade.lot_size * (trade.leverage || 1);
+      totalFloatingPNL += pnl;
 
-    // Free margin = equity - margin used
-    const freeMargin = equity - margin;
+      const marginUsed = (trade.entry_price * trade.lot_size) / (trade.leverage || 1);
+      totalMarginUsed += marginUsed;
+    }
 
-    // Margin level = (equity / margin) * 100 (if margin > 0)
-    const marginLevel = margin > 0 ? (equity / margin) * 100 : 0;
+    const equity = (walletBalance || 0) + totalFloatingPNL;
+    const freeMargin = equity - totalMarginUsed;
+    const marginLevel = totalMarginUsed > 0 ? (equity / totalMarginUsed) * 100 : 0;
 
     setMetrics({
       equity,
-      floatingPNL,
-      margin,
+      floatingPNL: totalFloatingPNL,
+      margin: totalMarginUsed,
       freeMargin,
       marginLevel
     });
-  };
+  }, [trades, walletBalance, prices]);
+
+  const formatMoney = (val: number) =>
+    `$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -73,12 +87,8 @@ const TradingMetrics = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${metrics.equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Balance + Floating P&L
-          </p>
+          <div className="text-2xl font-bold">{formatMoney(metrics.equity)}</div>
+          <p className="text-xs text-muted-foreground mt-1">Balance + Floating P&L</p>
         </CardContent>
       </Card>
 
@@ -90,12 +100,14 @@ const TradingMetrics = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${metrics.floatingPNL >= 0 ? 'text-success' : 'text-destructive'}`}>
-            ${metrics.floatingPNL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div
+            className={`text-2xl font-bold ${
+              metrics.floatingPNL >= 0 ? 'text-success' : 'text-destructive'
+            }`}
+          >
+            {formatMoney(metrics.floatingPNL)}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Unrealized profit/loss
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Unrealized profit/loss</p>
         </CardContent>
       </Card>
 
@@ -107,12 +119,8 @@ const TradingMetrics = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${metrics.margin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Margin used
-          </p>
+          <div className="text-2xl font-bold">{formatMoney(metrics.margin)}</div>
+          <p className="text-xs text-muted-foreground mt-1">Margin used</p>
         </CardContent>
       </Card>
 
@@ -124,12 +132,8 @@ const TradingMetrics = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${metrics.freeMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Available to trade
-          </p>
+          <div className="text-2xl font-bold">{formatMoney(metrics.freeMargin)}</div>
+          <p className="text-xs text-muted-foreground mt-1">Available to trade</p>
         </CardContent>
       </Card>
 
@@ -141,15 +145,18 @@ const TradingMetrics = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${
-            metrics.marginLevel >= 100 ? 'text-success' :
-            metrics.marginLevel >= 50 ? 'text-warning' : 'text-destructive'
-          }`}>
+          <div
+            className={`text-2xl font-bold ${
+              metrics.marginLevel >= 100
+                ? 'text-success'
+                : metrics.marginLevel >= 50
+                ? 'text-warning'
+                : 'text-destructive'
+            }`}
+          >
             {metrics.marginLevel.toFixed(2)}%
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Health indicator
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Health indicator</p>
         </CardContent>
       </Card>
     </div>
@@ -157,3 +164,4 @@ const TradingMetrics = () => {
 };
 
 export default TradingMetrics;
+

@@ -1,21 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Activity,
-  Wallet,
-  CreditCard,
-  Settings,
-  LogOut,
-  FileText,
-  Award
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DollarSign,
+  TrendingUp,
+  Award,
 } from 'lucide-react';
 import DashboardNavbar from '@/components/dashboard/DashboardNavbar';
 import TradingSimulation from '@/components/dashboard/TradingSimulation';
@@ -30,53 +22,84 @@ import { Loans } from '@/components/dashboard/Loans';
 import Referrals from '@/components/dashboard/Referrals';
 
 const Dashboard = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState({
     balance: 0,
     totalInvestments: 0,
     activeInvestments: 0,
     totalTrades: 0,
-    winRate: 0
+    winRate: 0,
   });
+  const [loading, setLoading] = useState(true);
+
+  const formatMoney = (amount: number) => {
+    return `$${amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
       if (!user) return;
+      setLoading(true);
 
-      // Fetch user investments
-      const { data: investments } = await supabase
-        .from('user_investments')
-        .select('*')
-        .eq('user_id', user.id);
+      try {
+        // ✅ Fetch wallet balance
+        const { data: wallet, error: walletError } = await supabase
+          .from('wallets')
+          .select('balance')
+          .eq('user_id', user.id)
+          .single();
 
-      // Fetch user trades
-      const { data: trades } = await supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', user.id);
+        if (walletError) {
+          console.warn('Wallet fetch error:', walletError.message);
+        }
 
-      const totalInvestments = investments?.reduce((sum, inv) => sum + parseFloat(inv.amount.toString()), 0) || 0;
-      const activeInvestments = investments?.filter(inv => inv.status === 'active').length || 0;
-      const totalTrades = trades?.length || 0;
-      const winningTrades = trades?.filter(trade => parseFloat(trade.profit_loss.toString()) > 0).length || 0;
-      const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+        // ✅ Fetch user investments
+        const { data: investments } = await supabase
+          .from('user_investments')
+          .select('*')
+          .eq('user_id', user.id);
 
-      setStats({
-        balance: profile?.balance || 0,
-        totalInvestments,
-        activeInvestments,
-        totalTrades,
-        winRate
-      });
+        // ✅ Fetch user trades
+        const { data: trades } = await supabase
+          .from('trades')
+          .select('*')
+          .eq('user_id', user.id);
+
+        const totalInvestments =
+          investments?.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0) || 0;
+
+        const activeInvestments =
+          investments?.filter((inv) => inv.status === 'active').length || 0;
+
+        const totalTrades = trades?.length || 0;
+        const winningTrades =
+          trades?.filter((trade) => parseFloat(trade.profit_loss || 0) > 0).length || 0;
+        const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+
+        setStats({
+          balance: wallet?.balance || 0,
+          totalInvestments,
+          activeInvestments,
+          totalTrades,
+          winRate,
+        });
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDashboardStats();
-  }, [user, profile]);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
-      
+
       <div className="container mx-auto px-4 py-6">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -101,65 +124,69 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="card-glass">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
-              <DollarSign className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">
-                ${stats.balance.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">Available for trading</p>
-            </CardContent>
-          </Card>
+        {!loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <Card className="card-glass">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
+                <DollarSign className="h-4 w-4 text-success" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-success">
+                  {formatMoney(stats.balance)}
+                </div>
+                <p className="text-xs text-muted-foreground">Available for trading</p>
+              </CardContent>
+            </Card>
 
-          <Card className="card-glass">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Investments</CardTitle>
-              <TrendingUp className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">
-                ${stats.totalInvestments.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {stats.activeInvestments} active plans
-              </p>
-            </CardContent>
-          </Card>
+            <Card className="card-glass">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Investments</CardTitle>
+                <TrendingUp className="h-4 w-4 text-warning" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-warning">
+                  {formatMoney(stats.totalInvestments)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.activeInvestments} active plans
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card className="card-glass">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-              <Award className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">
-                {stats.winRate.toFixed(1)}%
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {stats.totalTrades} total trades
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="card-glass">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+                <Award className="h-4 w-4 text-success" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-success">
+                  {stats.winRate.toFixed(1)}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.totalTrades} total trades
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground">Loading dashboard data...</p>
+        )}
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="trading" className="w-full">
           <div className="w-full overflow-x-auto -mx-4 px-4 pb-2">
             <TabsList className="w-full flex justify-start md:justify-center">
-              <TabsTrigger value="trading" className="flex-shrink-0">Trading</TabsTrigger>
-              <TabsTrigger value="copy-trading" className="flex-shrink-0">Copy Trading</TabsTrigger>
-              <TabsTrigger value="investments" className="flex-shrink-0">Investments</TabsTrigger>
-              <TabsTrigger value="deposits" className="flex-shrink-0">Deposits</TabsTrigger>
-              <TabsTrigger value="withdrawals" className="flex-shrink-0">Withdrawals</TabsTrigger>
-              <TabsTrigger value="loans" className="flex-shrink-0">Loans</TabsTrigger>
-              <TabsTrigger value="referrals" className="flex-shrink-0">Referrals</TabsTrigger>
-              <TabsTrigger value="kyc" className="flex-shrink-0">KYC</TabsTrigger>
-              <TabsTrigger value="notifications" className="flex-shrink-0">Notifications</TabsTrigger>
-              <TabsTrigger value="profile" className="flex-shrink-0">Profile</TabsTrigger>
+              <TabsTrigger value="trading">Trading</TabsTrigger>
+              <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
+              <TabsTrigger value="investments">Investments</TabsTrigger>
+              <TabsTrigger value="deposits">Deposits</TabsTrigger>
+              <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
+              <TabsTrigger value="loans">Loans</TabsTrigger>
+              <TabsTrigger value="referrals">Referrals</TabsTrigger>
+              <TabsTrigger value="kyc">KYC</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
           </div>
 
@@ -183,20 +210,20 @@ const Dashboard = () => {
             <Withdrawals />
           </TabsContent>
 
-          <TabsContent value="kyc" className="mt-6">
-            <KYCVerification />
-          </TabsContent>
-
-          <TabsContent value="notifications" className="mt-6">
-            <Notifications />
-          </TabsContent>
-
           <TabsContent value="loans" className="mt-6">
             <Loans />
           </TabsContent>
 
           <TabsContent value="referrals" className="mt-6">
             <Referrals />
+          </TabsContent>
+
+          <TabsContent value="kyc" className="mt-6">
+            <KYCVerification />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="mt-6">
+            <Notifications />
           </TabsContent>
 
           <TabsContent value="profile" className="mt-6">
@@ -209,3 +236,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

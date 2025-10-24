@@ -115,21 +115,6 @@ const DashboardNavbar = () => {
           {/* Right side */}
           <div className="flex items-center space-x-4">
             {/* Balance Display */}
-            <div className="hidden md:flex items-center space-x-4 text-sm">
-              <div className="text-center">
-                <p className="text-muted-foreground">Real Balance</p>
-                <p className="font-semibold text-success">
-                  ${profile?.balance?.toLocaleString() || '0'}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-muted-foreground">Demo Balance</p>
-                <p className="font-semibold text-primary">
-                  ${profile?.demo_balance?.toLocaleString() || '10,000'}
-                </p>
-              </div>
-            </div>
-
             {/* Notifications */}
             <Button 
               variant="ghost" 

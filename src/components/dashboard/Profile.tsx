@@ -255,21 +255,7 @@ const Profile = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-success">
-                ${(profile?.balance || 0).toLocaleString()}
-              </div>
-              <p className="text-sm text-muted-foreground">Real Balance</p>
-            </div>
-            
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">
-                ${(profile?.demo_balance || 0).toLocaleString()}
-              </div>
-              <p className="text-sm text-muted-foreground">Demo Balance</p>
-            </div>
-            
-            <div className="text-center p-4 border rounded-lg">
+              <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-warning">
                 {profile?.kyc_status === 'approved' ? '✓' : '⏳'}
               </div>
