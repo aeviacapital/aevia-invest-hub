@@ -16,12 +16,35 @@ import TradingMetrics from './TradingMetrics';
 type Trade = any;
 
 const SYMBOL_MAP: Record<string, { type: 'crypto' | 'forex'; binance?: string; tvSymbol: string; base?: string; quote?: string }> = {
+  // --- CRYPTO PAIRS ---
   'BTC/USD': { type: 'crypto', binance: 'btcusdt', tvSymbol: 'BINANCE:BTCUSDT' },
   'ETH/USD': { type: 'crypto', binance: 'ethusdt', tvSymbol: 'BINANCE:ETHUSDT' },
-  'EUR/USD': { type: 'forex', base: 'EUR', quote: 'USD', tvSymbol: 'FX:EURUSD' },
-  'GBP/USD': { type: 'forex', base: 'GBP', quote: 'USD', tvSymbol: 'FX:GBPUSD' },
-  'USD/JPY': { type: 'forex', base: 'USD', quote: 'JPY', tvSymbol: 'FX:USDJPY' },
-};
+  'BNB/USD': { type: 'crypto', binance: 'bnbusdt', tvSymbol: 'BINANCE:BNBUSDT' },
+  'SOL/USD': { type: 'crypto', binance: 'solusdt', tvSymbol: 'BINANCE:SOLUSDT' },
+  'XRP/USD': { type: 'crypto', binance: 'xrpusdt', tvSymbol: 'BINANCE:XRPUSDT' },
+  'ADA/USD': { type: 'crypto', binance: 'adausdt', tvSymbol: 'BINANCE:ADAUSDT' },
+  'DOGE/USD': { type: 'crypto', binance: 'dogeusdt', tvSymbol: 'BINANCE:DOGEUSDT' },
+  'AVAX/USD': { type: 'crypto', binance: 'avaxusdt', tvSymbol: 'BINANCE:AVAXUSDT' },
+  'DOT/USD': { type: 'crypto', binance: 'dotusdt', tvSymbol: 'BINANCE:DOTUSDT' },
+  'LINK/USD': { type: 'crypto', binance: 'linkusdt', tvSymbol: 'BINANCE:LINKUSDT' },
+  'MATIC/USD': { type: 'crypto', binance: 'maticusdt', tvSymbol: 'BINANCE:MATICUSDT' },
+  'TRX/USD': { type: 'crypto', binance: 'trxusdt', tvSymbol: 'BINANCE:TRXUSDT' },
+  'LTC/USD': { type: 'crypto', binance: 'ltcusdt', tvSymbol: 'BINANCE:LTCUSDT' },
+  'BCH/USD': { type: 'crypto', binance: 'bchusdt', tvSymbol: 'BINANCE:BCHUSDT' },
+  'XLM/USD': { type: 'crypto', binance: 'xlmusdt', tvSymbol: 'BINANCE:XLMUSDT' },
+  'ATOM/USD': { type: 'crypto', binance: 'atomusdt', tvSymbol: 'BINANCE:ATOMUSDT' },
+  'ETC/USD': { type: 'crypto', binance: 'etcusdt', tvSymbol: 'BINANCE:ETCUSDT' },
+  'FIL/USD': { type: 'crypto', binance: 'filusdt', tvSymbol: 'BINANCE:FILUSDT' },
+  'APT/USD': { type: 'crypto', binance: 'aptusdt', tvSymbol: 'BINANCE:APTUSDT' },
+  'ARB/USD': { type: 'crypto', binance: 'arbusdt', tvSymbol: 'BINANCE:ARBUSDT' },
+  'OP/USD': { type: 'crypto', binance: 'opusdt', tvSymbol: 'BINANCE:OPUSDT' },
+  'NEAR/USD': { type: 'crypto', binance: 'nearusdt', tvSymbol: 'BINANCE:NEARUSDT' },
+  'SUI/USD': { type: 'crypto', binance: 'suiusdt', tvSymbol: 'BINANCE:SUIUSDT' },
+  'TON/USD': { type: 'crypto', binance: 'tonusdt', tvSymbol: 'BINANCE:TONUSDT' },
+  'PEPE/USD': { type: 'crypto', binance: 'pepeusdt', tvSymbol: 'BINANCE:PEPEUSDT' },
+  'SHIB/USD': { type: 'crypto', binance: 'shibusdt', tvSymbol: 'BINANCE:SHIBUSDT' },
+
+   };
 
 const POLL_INTERVAL_MS = 3000;
 const BINANCE_WS_URL = (symbols: string[]) =>
@@ -36,11 +59,33 @@ const TradingSimulation: React.FC = () => {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
   const [prices, setPrices] = useState<Record<string, number>>({
-    'BTC/USD': 0,
-    'ETH/USD': 0,
-    'EUR/USD': 0,
-    'GBP/USD': 0,
-    'USD/JPY': 0,
+  'BTC/USD': 0,
+  'ETH/USD': 0,
+  'BNB/USD': 0,
+  'SOL/USD': 0,
+  'XRP/USD': 0,
+  'ADA/USD': 0,
+  'DOGE/USD': 0,
+  'AVAX/USD': 0,
+  'DOT/USD': 0,
+  'LINK/USD': 0,
+  'MATIC/USD': 0,
+  'TRX/USD': 0,
+  'LTC/USD': 0,
+  'BCH/USD': 0,
+  'XLM/USD': 0,
+  'ATOM/USD': 0,
+  'ETC/USD': 0,
+  'FIL/USD': 0,
+  'APT/USD': 0,
+  'ARB/USD': 0,
+  'OP/USD': 0,
+  'NEAR/USD': 0,
+  'SUI/USD': 0,
+  'TON/USD': 0,
+  'PEPE/USD': 0,
+  'SHIB/USD': 0,
+    
   });
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -561,7 +606,7 @@ const callCloseTradeRpc = async (tradeId: string, exitPrice: number) => {
         <Card className="lg:col-span-1 card-glass">
           <CardHeader>
             <CardTitle className="flex items-center"><Activity className="w-5 h-5 mr-2" />Place Trade</CardTitle>
-            <CardDescription>Live trading with public tickers</CardDescription>
+            <CardDescription>Live trading</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -570,7 +615,6 @@ const callCloseTradeRpc = async (tradeId: string, exitPrice: number) => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                  <SelectItem value="forex">Forex</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -582,8 +626,34 @@ const callCloseTradeRpc = async (tradeId: string, exitPrice: number) => {
                 <SelectContent>
                   {tradeForm.marketType === 'crypto' ? (
                     <>
-                      <SelectItem value="BTC/USD">BTC/USD</SelectItem>
-                      <SelectItem value="ETH/USD">ETH/USD</SelectItem>
+<SelectItem value="BTC/USD">BTC/USD</SelectItem>
+<SelectItem value="ETH/USD">ETH/USD</SelectItem>
+<SelectItem value="BNB/USD">BNB/USD</SelectItem>
+<SelectItem value="SOL/USD">SOL/USD</SelectItem>
+<SelectItem value="XRP/USD">XRP/USD</SelectItem>
+<SelectItem value="ADA/USD">ADA/USD</SelectItem>
+<SelectItem value="DOGE/USD">DOGE/USD</SelectItem>
+<SelectItem value="AVAX/USD">AVAX/USD</SelectItem>
+<SelectItem value="DOT/USD">DOT/USD</SelectItem>
+<SelectItem value="LINK/USD">LINK/USD</SelectItem>
+<SelectItem value="MATIC/USD">MATIC/USD</SelectItem>
+<SelectItem value="TRX/USD">TRX/USD</SelectItem>
+<SelectItem value="LTC/USD">LTC/USD</SelectItem>
+<SelectItem value="BCH/USD">BCH/USD</SelectItem>
+<SelectItem value="XLM/USD">XLM/USD</SelectItem>
+<SelectItem value="ATOM/USD">ATOM/USD</SelectItem>
+<SelectItem value="ETC/USD">ETC/USD</SelectItem>
+<SelectItem value="FIL/USD">FIL/USD</SelectItem>
+<SelectItem value="APT/USD">APT/USD</SelectItem>
+<SelectItem value="ARB/USD">ARB/USD</SelectItem>
+<SelectItem value="OP/USD">OP/USD</SelectItem>
+<SelectItem value="NEAR/USD">NEAR/USD</SelectItem>
+<SelectItem value="SUI/USD">SUI/USD</SelectItem>
+<SelectItem value="TON/USD">TON/USD</SelectItem>
+<SelectItem value="PEPE/USD">PEPE/USD</SelectItem>
+<SelectItem value="SHIB/USD">SHIB/USD</SelectItem>
+                    
+                      
                     </>
                   ) : (
                     <>
@@ -645,18 +715,18 @@ const callCloseTradeRpc = async (tradeId: string, exitPrice: number) => {
               <div className="text-2xl font-bold text-primary">{prices[tradeForm.symbol] ? formatMoney(prices[tradeForm.symbol]) : 'Loading...'}</div>
               <p className="text-xs text-muted-foreground">If order type is Market, live price will be used. For stops/limits, set trigger below.</p>
               {tradeForm.orderType !== 'market' && (
-                <Input type="number" value={tradeForm.entryPrice} onChange={(e) => setTradeForm(prev => ({ ...prev, entryPrice: Number(e.target.value) }))} placeholder="Trigger price" />
+                <Input type="number"  onChange={(e) => setTradeForm(prev => ({ ...prev, entryPrice: Number(e.target.value) }))} placeholder={tradeForm.entryPrice} />
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Stop Loss</Label>
-                <Input type="number" value={tradeForm.stopLoss} onChange={(e) => setTradeForm(prev => ({ ...prev, stopLoss: Number(e.target.value) }))} placeholder="0 = none" />
+                <Input type="number"  onChange={(e) => setTradeForm(prev => ({ ...prev, stopLoss: Number(e.target.value) }))} placeholder={tradeForm.stopLoss} />
               </div>
               <div>
                 <Label>Take Profit</Label>
-                <Input type="number" value={tradeForm.takeProfit} onChange={(e) => setTradeForm(prev => ({ ...prev, takeProfit: Number(e.target.value) }))} placeholder="0 = none" />
+                <Input type="number"  onChange={(e) => setTradeForm(prev => ({ ...prev, takeProfit: Number(e.target.value) }))} placeholder={tradeForm.takeProfit} />
               </div>
             </div>
 
@@ -683,105 +753,174 @@ const callCloseTradeRpc = async (tradeId: string, exitPrice: number) => {
       </div>
 
       {/* Active Trades */}
-      <Card className="card-glass">
-        <CardHeader>
-          <CardTitle className="flex items-center"><TrendingUp className="w-5 h-5 mr-2" />Your Trades</CardTitle>
-          <CardDescription>Manage your open and closed positions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="open" className="w-full">
-            <TabsList>
-              <TabsTrigger value="open">Open Trades</TabsTrigger>
-              <TabsTrigger value="pending">Pending Orders</TabsTrigger>
-              <TabsTrigger value="closed">Trade History</TabsTrigger>
-            </TabsList>
+    <Card className="card-glass">
+  <CardHeader>
+    <CardTitle className="flex items-center text-base md:text-xl">
+      <TrendingUp className="w-5 h-5 mr-2 md:w-6 md:h-6" />
+      Your Trades
+    </CardTitle>
+    <CardDescription className="text-sm md:text-base">
+      Manage your open and closed positions
+    </CardDescription>
+  </CardHeader>
 
-            <TabsContent value="open" className="mt-4">
-              <div className="space-y-4">
-                {derivedTrades.filter(t => t.status === 'open').length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">No open trades.</div>
-                ) : (
-                  derivedTrades.filter(t => t.status === 'open').map((trade) => {
-                    const cur = trade.current_price;
-                    const entry = Number(trade.entry_price);
-                    const pnl = Number(trade.unrealized_pnl || 0);
-                    return (
-                      <div key={trade.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Badge variant={trade.trade_type === 'buy' ? 'default' : 'destructive'}>{trade.trade_type.toUpperCase()}</Badge>
-                            <span className="font-medium">{trade.symbol}</span>
-                            <span className="text-muted-foreground">Lot: {trade.lot_size} | Leverage: 1:{trade.leverage}</span>
-                          </div>
-                          <Button variant="outline" size="sm" onClick={() => callCloseTradeRpc(trade.id, cur)}>Close</Button>
-                        </div>
+  <CardContent className="p-4 sm:p-6">
+    <Tabs defaultValue="open" className="w-full">
+      <TabsList className="flex flex-wrap gap-2 justify-center sm:justify-start sm:gap-4 overflow-x-auto pb-2">
+        <TabsTrigger value="open">Open Trades</TabsTrigger>
+        <TabsTrigger value="pending">Pending Orders</TabsTrigger>
+        <TabsTrigger value="closed">Trade History</TabsTrigger>
+      </TabsList>
 
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div><p className="text-muted-foreground">Entry</p><p className="font-medium">${Number(entry).toLocaleString()}</p></div>
-                          <div><p className="text-muted-foreground">Current</p><p className="font-medium">${Number(cur).toLocaleString()}</p></div>
-                          <div><p className="text-muted-foreground">Unrealized P&L</p><p className={`font-medium ${pnl >= 0 ? 'text-success' : 'text-destructive'}`}>${Number(pnl).toFixed(2)}</p></div>
-                        </div>
-
-                        <div className="text-xs text-muted-foreground">SL: {trade.stop_loss ?? '—'} • TP: {trade.take_profit ?? '—'} • Opened: {new Date(trade.created_at).toLocaleString()}</div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="pending" className="mt-4">
-              <div className="space-y-4">
-                {derivedTrades.filter(t => t.status === 'pending').length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">No pending orders.</div>
-                ) : (
-                  derivedTrades.filter(t => t.status === 'pending').map((t) => (
-                    <div key={t.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Badge variant="outline">{(t.order_type || 'pending').toUpperCase()}</Badge>
-                          <span className="font-medium">{t.symbol}</span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">Trigger: {t.entry_price}</div>
-                      </div>
-                      <div className="mt-2 text-sm text-muted-foreground">Placed: {new Date(t.created_at).toLocaleDateString()} {new Date(t.created_at).toLocaleTimeString()}</div>
+      {/* ========== OPEN TRADES ========== */}
+      <TabsContent value="open" className="mt-4">
+        <div className="space-y-4">
+          {derivedTrades.filter(t => t.status === 'open').length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm sm:text-base">
+              No open trades.
+            </div>
+          ) : (
+            derivedTrades.filter(t => t.status === 'open').map((trade) => {
+              const cur = trade.current_price;
+              const entry = Number(trade.entry_price);
+              const pnl = Number(trade.unrealized_pnl || 0);
+              return (
+                <div key={trade.id} className="border rounded-xl p-3 sm:p-4 space-y-3">
+                  {/* Trade Header: Type, Symbol, Info, and Close Button */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <Badge variant={trade.trade_type === 'buy' ? 'default' : 'destructive'}>
+                        {trade.trade_type.toUpperCase()}
+                      </Badge>
+                      <span className="font-semibold text-base">{trade.symbol}</span>
+                      <span className="text-muted-foreground text-xs sm:text-sm">
+                        Lot: {trade.lot_size} | Leverage: 1:{trade.leverage}
+                      </span>
                     </div>
-                  ))
-                )}
-              </div>
-            </TabsContent>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => callCloseTradeRpc(trade.id, cur)}
+                      className="w-full sm:w-auto text-sm"
+                    >
+                      Close
+                    </Button>
+                  </div>
 
-            <TabsContent value="closed" className="mt-4">
-              <div className="space-y-4">
-                {derivedTrades.filter(t => t.status === 'closed').length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">No closed trades yet.</div>
-                ) : (
-                  derivedTrades.filter(t => t.status === 'closed').map((trade) => (
-                    <div key={trade.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <Badge variant={trade.trade_type === 'buy' ? 'default' : 'destructive'}>{trade.trade_type.toUpperCase()}</Badge>
-                          <span className="font-medium">{trade.symbol}</span>
-                          <Badge variant={Number(trade.profit_loss) >= 0 ? 'default' : 'destructive'}>{Number(trade.profit_loss) >= 0 ? 'WIN' : 'LOSS'}</Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground">{new Date(trade.closed_at || trade.created_at).toLocaleDateString()}</div>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-4 text-sm">
-                        <div><p className="text-muted-foreground">Entry</p><p className="font-medium">{trade.entry_price}</p></div>
-                        <div><p className="text-muted-foreground">Exit</p><p className="font-medium">{trade.exit_price ?? '-'}</p></div>
-                        <div><p className="text-muted-foreground">Lot</p><p className="font-medium">{trade.lot_size}</p></div>
-                        <div><p className="text-muted-foreground">P&L</p><p className={`font-medium ${Number(trade.profit_loss) >= 0 ? 'text-success' : 'text-destructive'}`}>{Number(trade.profit_loss ?? 0).toFixed(2)}</p></div>
-                      </div>
+                  {/* Trade Details: Entry, Current, P&L */}
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground truncate">Entry</p>
+                      <p className="font-medium truncate">${Number(entry).toLocaleString()}</p>
                     </div>
-                  ))
-                )}
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground truncate">Current</p>
+                      <p className="font-medium truncate">${Number(cur).toLocaleString()}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground truncate">Unrealized P&L</p>
+                      <p className={`font-medium truncate ${pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        ${Number(pnl).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Footer: SL, TP, Opened */}
+                  <div className="text-xs text-muted-foreground break-words pt-1 border-t border-dashed mt-3">
+                    SL: {trade.stop_loss ?? '—'} • TP: {trade.take_profit ?? '—'} • Opened:{' '}
+                    {new Date(trade.created_at).toLocaleString()}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </TabsContent>
+
+      {/* ========== PENDING ORDERS ========== */}
+      <TabsContent value="pending" className="mt-4">
+        <div className="space-y-4">
+          {derivedTrades.filter(t => t.status === 'pending').length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm sm:text-base">
+              No pending orders.
+            </div>
+          ) : (
+            derivedTrades.filter(t => t.status === 'pending').map((t) => (
+              <div key={t.id} className="border rounded-xl p-3 sm:p-4 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <Badge variant="outline">{(t.order_type || 'pending').toUpperCase()}</Badge>
+                    <span className="font-semibold text-base">{t.symbol}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Trigger: {t.entry_price}
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground pt-1 border-t border-dashed mt-3">
+                  Placed: {new Date(t.created_at).toLocaleDateString()} {new Date(t.created_at).toLocaleTimeString()}
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+            ))
+          )}
+        </div>
+      </TabsContent>
+
+      {/* ========== CLOSED TRADES ========== */}
+      <TabsContent value="closed" className="mt-4">
+        <div className="space-y-4">
+          {derivedTrades.filter(t => t.status === 'closed').length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm sm:text-base">
+              No closed trades yet.
+            </div>
+          ) : (
+            derivedTrades.filter(t => t.status === 'closed').map((trade) => (
+              <div key={trade.id} className="border rounded-xl p-3 sm:p-4 space-y-3">
+                {/* Trade Header: Type, Symbol, Status, and Date */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <Badge variant={trade.trade_type === 'buy' ? 'default' : 'destructive'}>
+                      {trade.trade_type.toUpperCase()}
+                    </Badge>
+                    <span className="font-semibold text-base">{trade.symbol}</span>
+                    <Badge variant={Number(trade.profit_loss) >= 0 ? 'default' : 'destructive'}>
+                      {Number(trade.profit_loss) >= 0 ? 'WIN' : 'LOSS'}
+                    </Badge>
+                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    Closed: {new Date(trade.closed_at || trade.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+
+                {/* Trade Details: Entry, Exit, Lot, P&L */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground truncate">Entry</p>
+                    <p className="font-medium truncate">{trade.entry_price}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground truncate">Exit</p>
+                    <p className="font-medium truncate">{trade.exit_price ?? '-'}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground truncate">Lot</p>
+                    <p className="font-medium truncate">{trade.lot_size}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground truncate">P&L</p>
+                    <p className={`font-medium truncate ${Number(trade.profit_loss) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {Number(trade.profit_loss ?? 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </TabsContent>
+    </Tabs>
+  </CardContent>
+</Card> 
+          </div>
   );
 };
 
