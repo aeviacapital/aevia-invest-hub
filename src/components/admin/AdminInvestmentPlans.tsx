@@ -32,7 +32,7 @@ export const AdminInvestmentPlans = () => {
     min_deposit: 0,
     expected_return_min: 0,
     expected_return_max: 0,
-    duration_months: 12,
+    duration_days: 3,
     features: [''],
     is_active: true,
   });
@@ -106,7 +106,7 @@ export const AdminInvestmentPlans = () => {
       min_deposit: plan.min_deposit,
       expected_return_min: plan.expected_return_min,
       expected_return_max: plan.expected_return_max,
-      duration_months: plan.duration_months,
+      duration_days: plan.duration_days,
       features: plan.features || [''],
       is_active: plan.is_active,
     });
@@ -128,6 +128,29 @@ export const AdminInvestmentPlans = () => {
     }
   };
 
+  // 🧨 NEW: Handle plan deletion safely
+  const handleDelete = async (planId: string) => {
+    if (!confirm('Are you sure you want to delete this plan? This action cannot be undone.')) return;
+
+    const { error } = await supabase.from('investment_plans').delete().eq('id', planId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Deleted',
+      description: 'Investment plan deleted successfully',
+    });
+
+    fetchPlans();
+  };
+
   const resetForm = () => {
     setEditingPlan(null);
     setFormData({
@@ -138,7 +161,7 @@ export const AdminInvestmentPlans = () => {
       min_deposit: 0,
       expected_return_min: 0,
       expected_return_max: 0,
-      duration_months: 12,
+      duration_days: 3,
       features: [''],
       is_active: true,
     });
@@ -205,7 +228,7 @@ export const AdminInvestmentPlans = () => {
                         </div>
                         <div>
                           <p className="text-muted-foreground">Duration</p>
-                          <p className="font-semibold">{plan.duration_months} months</p>
+                          <p className="font-semibold">{plan.duration_days} days</p>
                         </div>
                       </div>
                     </div>
@@ -220,6 +243,14 @@ export const AdminInvestmentPlans = () => {
                       >
                         {plan.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </Button>
+                      {/* 🗑️ NEW DELETE BUTTON */}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(plan.id)}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -229,6 +260,7 @@ export const AdminInvestmentPlans = () => {
         </CardContent>
       </Card>
 
+      {/* Dialog stays exactly the same */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         setIsDialogOpen(open);
         if (!open) resetForm();
@@ -241,7 +273,8 @@ export const AdminInvestmentPlans = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* FORM CONTENT (UNCHANGED) */}
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="title">Plan Title</Label>
@@ -311,12 +344,12 @@ export const AdminInvestmentPlans = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="duration_months">Duration (Months)</Label>
+                <Label htmlFor="duration_days">Duration (Days)</Label>
                 <Input
-                  id="duration_months"
+                  id="duration_days"
                   type="number"
-                  value={formData.duration_months}
-                  onChange={(e) => setFormData({ ...formData, duration_months: parseInt(e.target.value) })}
+                  value={formData.duration_days}
+                  onChange={(e) => setFormData({ ...formData, duration_days: parseInt(e.target.value) })}
                   required
                 />
               </div>
@@ -392,3 +425,4 @@ export const AdminInvestmentPlans = () => {
     </div>
   );
 };
+
