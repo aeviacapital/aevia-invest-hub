@@ -130,7 +130,7 @@ export const AdminWithdrawals = () => {
       });
 
       fetchWithdrawals();
-      setSelectedWithdrawal(null);
+      setSelectedWithdrawal(withdrawals);
       setAdminNotes('');
     } catch (error) {
       console.error('Error updating withdrawal status:', error);

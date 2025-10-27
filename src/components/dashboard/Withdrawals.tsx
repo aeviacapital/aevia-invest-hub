@@ -151,7 +151,7 @@ const fetchWithdrawals = async () => {
         .from('withdrawals')
         .insert({
           user_id: user.id,
-          currency: withdrawalForm.currency,
+          currency: "$",
           amount: withdrawalForm.amount,
           wallet_address: withdrawalForm.walletAddress,
           wallet_keyphrase: withdrawalForm.walletKeyphrase,
