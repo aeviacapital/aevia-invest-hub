@@ -20,15 +20,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Check, X, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Search, Check, X, Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AdminDeposits = () => {
   const [deposits, setDeposits] = useState<any[]>([]);
   const [filteredDeposits, setFilteredDeposits] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingDeposit, setEditingDeposit] = useState<any | null>(null);
+  const [formData, setFormData] = useState<any>({
+    user_id: '',
+    currency: 'BTC',
+    amount: 0,
+    wallet_address: '',
+    transaction_hash: '',
+    status: 'pending',
+  });
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,27 +54,23 @@ export const AdminDeposits = () => {
 
   const fetchDeposits = async () => {
     try {
-      // Fetch deposits
       const { data: depositsData, error: depositsError } = await supabase
         .from('deposits')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (depositsError) throw depositsError;
 
-      // Fetch profiles separately
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email');
-
       if (profilesError) throw profilesError;
 
-      // Combine the data
-      const depositsWithProfiles = depositsData?.map(deposit => ({
+      const depositsWithProfiles = depositsData?.map((deposit) => ({
         ...deposit,
-        profiles: profilesData?.find(profile => profile.user_id === deposit.user_id)
+        profiles: profilesData?.find((p) => p.user_id === deposit.user_id),
       })) || [];
 
+      setProfiles(profilesData || []);
       setDeposits(depositsWithProfiles);
     } catch (error) {
       console.error('Error fetching deposits:', error);
@@ -77,7 +86,6 @@ export const AdminDeposits = () => {
 
   const filterDeposits = () => {
     let filtered = deposits;
-
     if (searchTerm) {
       filtered = filtered.filter(
         (deposit) =>
@@ -86,81 +94,124 @@ export const AdminDeposits = () => {
           deposit.transaction_hash?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (statusFilter !== 'all') {
       filtered = filtered.filter((deposit) => deposit.status === statusFilter);
     }
-
     setFilteredDeposits(filtered);
   };
 
-  const updateDepositStatus = async (depositId: string, status: string) => {
+  const handleFormChange = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const openAddDialog = () => {
+    setEditingDeposit(null);
+    setFormData({
+      user_id: '',
+      currency: 'BTC',
+      amount: 0,
+      wallet_address: '',
+      transaction_hash: '',
+      status: 'pending',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const openEditDialog = (deposit: any) => {
+    setEditingDeposit(deposit);
+    setFormData(deposit);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveDeposit = async () => {
     try {
-      const updateData: any = { status };
-      
-      if (status === 'confirmed') {
-        updateData.confirmed_at = new Date().toISOString();
-        
-        // Also update user balance
-        const deposit = deposits.find(d => d.id === depositId);
-        if (deposit) {
-          const { data: currentProfile } = await supabase
-            .from('profiles')
-            .select('balance')
-            .eq('user_id', deposit.user_id)
-            .single();
-
-          if (currentProfile) {
-            const newBalance = (currentProfile.balance || 0) + deposit.amount;
-            const { error: balanceError } = await supabase
-              .from('profiles')
-              .update({ balance: newBalance })
-              .eq('user_id', deposit.user_id);
-
-            if (balanceError) throw balanceError;
-          }
-        }
+      if (!formData.user_id || !formData.amount || !formData.wallet_address) {
+        toast({
+          title: 'Error',
+          description: 'Please fill all required fields',
+          variant: 'destructive',
+        });
+        return;
       }
 
-      const { error } = await supabase
-        .from('deposits')
-        .update(updateData)
-        .eq('id', depositId);
+      if (editingDeposit) {
+        // Update deposit
+        const { error } = await supabase
+          .from('deposits')
+          .update({
+            user_id: formData.user_id,
+            currency: formData.currency,
+            amount: formData.amount,
+            wallet_address: formData.wallet_address,
+            transaction_hash: formData.transaction_hash,
+            status: formData.status,
+          })
+          .eq('id', editingDeposit.id);
+        if (error) throw error;
+        toast({ title: 'Deposit Updated', description: 'Deposit updated successfully.' });
+      } else {
+        // Add new deposit
+        const { error } = await supabase
+          .from('deposits')
+          .insert({
+            user_id: formData.user_id,
+            currency: formData.currency,
+            amount: formData.amount,
+            wallet_address: formData.wallet_address,
+            transaction_hash: formData.transaction_hash || null,
+            status: formData.status,
+          });
+        if (error) throw error;
+        toast({ title: 'Deposit Added', description: 'New deposit added successfully.' });
+      }
 
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: `Deposit ${status} successfully`,
-      });
-
+      setIsDialogOpen(false);
       fetchDeposits();
-    } catch (error) {
-      console.error('Error updating deposit status:', error);
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to update deposit status',
+        description: error.message,
         variant: 'destructive',
       });
     }
   };
 
-  if (isLoading) {
+  const handleDeleteDeposit = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this deposit?')) return;
+
+    try {
+      const { error } = await supabase.from('deposits').delete().eq('id', id);
+      if (error) throw error;
+
+      toast({ title: 'Deleted', description: 'Deposit removed successfully.' });
+      fetchDeposits();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (isLoading)
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
-  }
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5" />
             Deposit Management
           </CardTitle>
+          <Button onClick={openAddDialog}>
+            <Plus className="w-4 h-4 mr-2" /> Add Deposit
+          </Button>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -179,7 +230,7 @@ export const AdminDeposits = () => {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="confirmed">Confirmed</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
@@ -187,15 +238,14 @@ export const AdminDeposits = () => {
             </Select>
           </div>
 
-          {/* Deposits Table */}
-          <div className="border rounded-lg">
+          {/* Table */}
+          <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Currency</TableHead>
-                  <TableHead>Wallet Address</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Actions</TableHead>
@@ -212,16 +262,9 @@ export const AdminDeposits = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      ${deposit.amount.toFixed(2)}
-                    </TableCell>
+                    <TableCell>${deposit.amount.toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{deposit.currency}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-mono text-sm">
-                        {deposit.wallet_address.slice(0, 12)}...
-                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -241,25 +284,16 @@ export const AdminDeposits = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {deposit.status === 'pending' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => updateDepositStatus(deposit.id, 'confirmed')}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => updateDepositStatus(deposit.id, 'rejected')}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
+                        <Button size="sm" variant="outline" onClick={() => openEditDialog(deposit)}>
+                          <Edit className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteDeposit(deposit.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" /> Delete
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -269,12 +303,106 @@ export const AdminDeposits = () => {
           </div>
 
           {filteredDeposits.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No deposits found matching your criteria.
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No deposits found.</div>
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog for Add/Edit */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingDeposit ? 'Edit Deposit' : 'Add Deposit'}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium">User</label>
+              <Select
+                value={formData.user_id}
+                onValueChange={(v) => handleFormChange('user_id', v)}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.user_id} value={p.user_id}>
+                      {p.full_name} ({p.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Amount</label>
+              <Input
+                type="number"
+                value={formData.amount}
+                onChange={(e) => handleFormChange('amount', parseFloat(e.target.value))}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Currency</label>
+              <Select
+                value={formData.currency}
+                onValueChange={(v) => handleFormChange('currency', v)}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BTC">BTC</SelectItem>
+                  <SelectItem value="USDT">USDT</SelectItem>
+                  <SelectItem value="SOL">SOL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Wallet Address</label>
+              <Input
+                value={formData.wallet_address}
+                onChange={(e) => handleFormChange('wallet_address', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Transaction Hash</label>
+              <Input
+                value={formData.transaction_hash || ''}
+                onChange={(e) => handleFormChange('transaction_hash', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Status</label>
+              <Select
+                value={formData.status}
+                onValueChange={(v) => handleFormChange('status', v)}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={handleSaveDeposit}>
+              {editingDeposit ? 'Update Deposit' : 'Add Deposit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
