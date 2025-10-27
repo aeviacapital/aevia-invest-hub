@@ -228,76 +228,92 @@ const Deposits = () => {
       </Card>
 
       {/* Deposit History */}
-      <Card className="card-glass">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Wallet className="w-5 h-5 mr-2" />
-            Deposit History
-          </CardTitle>
-          <CardDescription>
-            Track your deposit transactions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {deposits.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No deposits yet. Make your first deposit above.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {deposits.map((deposit) => (
-                <div key={deposit.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(deposit.status)}
-                        <span className="font-medium">{deposit.currency}</span>
-                      </div>
-                      <Badge className={`${getStatusColor(deposit.status)} text-white`}>
-                        {deposit.status}
-                      </Badge>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-lg">
-                        {parseFloat(deposit.amount).toFixed(8)} {deposit.currency}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(deposit.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
+<Card className="card-glass w-full max-w-4xl mx-auto">
+  <CardHeader className="space-y-1 text-center sm:text-left">
+    <CardTitle className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-start justify-center gap-2">
+      <div className="flex items-center gap-2">
+        <Wallet className="w-5 h-5 text-primary" />
+        <span>Deposit History</span>
+      </div>
+    </CardTitle>
+    <CardDescription className="text-sm text-muted-foreground">
+      Track your deposit transactions
+    </CardDescription>
+  </CardHeader>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Wallet Address</p>
-                      <p className="font-mono break-all">
-                        {deposit.wallet_address}
-                      </p>
-                    </div>
-                    {deposit.transaction_hash && (
-                      <div>
-                        <p className="text-muted-foreground">Transaction Hash</p>
-                        <p className="font-mono break-all">
-                          {deposit.transaction_hash}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {deposit.confirmed_at && (
-                    <div className="mt-3 pt-3 border-t">
-                      <p className="text-sm text-muted-foreground">
-                        Confirmed on: {new Date(deposit.confirmed_at).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
+  <CardContent>
+    {deposits.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+        <Wallet className="h-8 w-8 mb-3 opacity-60" />
+        <p>No deposits yet. Make your first deposit above.</p>
+      </div>
+    ) : (
+      <div className="space-y-4">
+        {deposits.map((deposit) => (
+          <div
+            key={deposit.id}
+            className="border rounded-xl p-4 sm:p-6 bg-card/50 hover:bg-accent/10 transition-colors shadow-sm"
+          >
+            {/* Top Section: Currency, Status, Amount */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(deposit.status)}
+                  <span className="font-semibold">{deposit.currency}</span>
                 </div>
-              ))}
+                <Badge
+                  className={`${getStatusColor(deposit.status)} text-white text-xs sm:text-sm`}
+                >
+                  {deposit.status}
+                </Badge>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-lg sm:text-xl">
+                  {parseFloat(deposit.amount).toFixed(8)} {deposit.currency}
+                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  {new Date(deposit.created_at).toLocaleDateString()}
+                </div>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            {/* Details Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground mb-1">Wallet Address</p>
+                <p className="font-mono break-all text-xs sm:text-sm">
+                  {deposit.wallet_address}
+                </p>
+              </div>
+              {deposit.transaction_hash && (
+                <div>
+                  <p className="text-muted-foreground mb-1">Transaction Hash</p>
+                  <p className="font-mono break-all text-xs sm:text-sm">
+                    {deposit.transaction_hash}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Confirmation Timestamp */}
+            {deposit.confirmed_at && (
+              <div className="mt-4 pt-3 border-t border-muted">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Confirmed on:{" "}
+                  <span className="font-medium">
+                    {new Date(deposit.confirmed_at).toLocaleString()}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </CardContent>
+</Card>
+      
+          </div>
   );
 };
 
