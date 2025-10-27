@@ -13,6 +13,8 @@ import { ArrowUpCircle, Clock, CheckCircle, XCircle, AlertTriangle, Wallet } fro
 
 const Withdrawals = () => {
   const { user, profile } = useAuth();
+  const [localProfile, setLocalProfile] = useState<any>(null);
+  const [walletsBalance, setWalletsBalance] = useState<any>(null); 
   const { toast } = useToast();
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,24 +24,90 @@ const Withdrawals = () => {
     walletAddress: '',
     walletKeyphrase: ''
   });
-
-  useEffect(() => {
-    fetchWithdrawals();
-  }, [user]);
-
-  const fetchWithdrawals = async () => {
+useEffect(() => {
+  const fetchProfile = async () => {
     if (!user) return;
-
-    const { data } = await supabase
-      .from('withdrawals')
+    const { data, error } = await supabase
+      .from('profiles')
       .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (data) {
+      setLocalProfile(data); // add this to state
+    }
+    if(error){
+      console.log(error); 
+      throw Error; 
+    }
+  };
+
+  fetchProfile();
+}, [user]);
+
+
+useEffect(() => {
+  if (user) {
+    fetchWithdrawals();
+  }
+}, [user]);
+
+useEffect(() => {
+  if (user) {
+    fetchWalletBalance();
+  }
+}, [user]);
+  
+  const fetchWalletBalance = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        console.log(data.balance); 
+
+      if (error) {
+        console.log(error); 
+        throw error;
+      }
+      setWalletsBalance(data?.balance || 0);
+    } catch (err) {
+      console.error('Error fetching wallet balance:', err.message);
+      setWalletsBalance(0);
+    }
+  };
+
+const fetchWithdrawals = async () => {
+  if (!user) return;
+
+  try {
+    setIsLoading(true);
+
+    const { data, error } = await supabase
+      .from('withdrawals')
+      .select('id, user_id, currency, amount, wallet_address, wallet_keyphrase, status, admin_notes, created_at, processed_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-    setWithdrawals(data || []);
-  };
+    if (error) throw error;
 
-  const handleInputChange = (field: string, value: any) => {
+    setWithdrawals(data || []);
+  } catch (error: any) {
+    console.error('Error fetching withdrawals:', error.message);
+    toast({
+      title: 'Error Fetching Withdrawals',
+      description: error.message,
+      variant: 'destructive',
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+  
+  
+
+   const handleInputChange = (field: string, value: any) => {
     setWithdrawalForm(prev => ({
       ...prev,
       [field]: value
@@ -49,7 +117,7 @@ const Withdrawals = () => {
   const handleWithdrawal = async () => {
     if (!user || withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress) return;
 
-    if (!profile?.is_verified) {
+    if (!localProfile?.is_verified) {
       toast({
         title: 'Verification Required',
         description: 'You must complete KYC verification before making withdrawals.',
@@ -58,7 +126,7 @@ const Withdrawals = () => {
       return;
     }
 
-    if (withdrawalForm.amount > (profile?.balance || 0)) {
+    if (withdrawalForm.amount > (walletsBalance || 0)) {
       toast({
         title: 'Insufficient Balance',
         description: 'Withdrawal amount exceeds your available balance.',
@@ -146,7 +214,8 @@ const Withdrawals = () => {
     }
   };
 
-  const canWithdraw = profile?.is_verified && profile?.kyc_status === 'approved';
+const canWithdraw = localProfile?.kyc_status === 'approved';
+  
 
   return (
     <div className="space-y-6">
@@ -166,7 +235,7 @@ const Withdrawals = () => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                {!profile?.is_verified 
+                {!localProfile?.is_verified 
                   ? 'You must complete KYC verification before making withdrawals. Please visit the KYC section.'
                   : 'Your KYC verification is pending approval. Withdrawals will be enabled once approved.'
                 }
@@ -200,14 +269,14 @@ const Withdrawals = () => {
                   type="number"
                   step="0.00000001"
                   min="0"
-                  max={profile?.balance || 0}
+                  max={walletsBalance?.balance || 0}
                   placeholder="Enter amount"
                   value={withdrawalForm.amount || ''}
                   onChange={(e) => handleInputChange('amount', parseFloat(e.target.value))}
                   disabled={!canWithdraw}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Available Balance: ${(profile?.balance || 0).toLocaleString()}
+                  Available Balance: ${(walletsBalance || 0).toLocaleString()}
                 </p>
               </div>
 
@@ -270,17 +339,13 @@ const Withdrawals = () => {
                 <h4 className="font-medium mb-2">Account Summary</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Real Balance:</span>
-                    <span className="font-medium">${(profile?.balance || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Demo Balance:</span>
-                    <span className="font-medium">${(profile?.demo_balance || 0).toLocaleString()}</span>
+                    <span className="text-muted-foreground">Balance:</span>
+                    <span className="font-medium">${(walletsBalance || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">KYC Status:</span>
-                    <Badge variant={profile?.kyc_status === 'approved' ? 'default' : 'destructive'}>
-                      {profile?.kyc_status || 'pending'}
+                    <Badge variant={localProfile?.kyc_status === 'approved' ? 'default' : 'destructive'}>
+                      {localProfile?.kyc_status || 'pending'}
                     </Badge>
                   </div>
                 </div>

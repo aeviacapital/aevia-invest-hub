@@ -228,7 +228,7 @@ const Deposits = () => {
       </Card>
 
       {/* Deposit History */}
-<Card className="card-glass w-full max-w-4xl mx-auto">
+<Card className="card-glass w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
   <CardHeader className="space-y-1 text-center sm:text-left">
     <CardTitle className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-start justify-center gap-2">
       <div className="flex items-center gap-2">
@@ -248,13 +248,13 @@ const Deposits = () => {
         <p>No deposits yet. Make your first deposit above.</p>
       </div>
     ) : (
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {deposits.map((deposit) => (
           <div
             key={deposit.id}
-            className="border rounded-xl p-4 sm:p-6 bg-card/50 hover:bg-accent/10 transition-colors shadow-sm"
+            className="border rounded-xl p-4 sm:p-6 bg-card/50 hover:bg-accent/10 transition-colors shadow-sm flex flex-col justify-between"
           >
-            {/* Top Section: Currency, Status, Amount */}
+            {/* Header: Currency, Status, Amount */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -299,7 +299,7 @@ const Deposits = () => {
             {deposit.confirmed_at && (
               <div className="mt-4 pt-3 border-t border-muted">
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Confirmed on:{" "}
+                  Confirmed on:{' '}
                   <span className="font-medium">
                     {new Date(deposit.confirmed_at).toLocaleString()}
                   </span>
@@ -313,6 +313,7 @@ const Deposits = () => {
   </CardContent>
 </Card>
       
+     
           </div>
   );
 };
