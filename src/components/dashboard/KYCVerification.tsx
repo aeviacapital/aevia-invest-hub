@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
-import { Shield, Upload, CheckCircle, XCircle, Clock, FileText, AlertTriangle } from 'lucide-react';
+import { Shield, Upload, CheckCircle, XCircle, Clock, FileText, AlertTriangle } from 'lucide-react'; 
 import { toast } from 'sonner';
 
 const KYCVerification = () => {
@@ -71,53 +71,61 @@ const KYCVerification = () => {
   };
 
   // 🔹 Upload to Supabase Storage
-  const handleDocumentUpload = async () => {
+  // 🔹 Upload to Supabase Storage
+ // Inside KYCVerification.tsx
+
+// ... (previous code remains the same)
+
+// 🔹 Upload to Supabase Storage
+  // Inside KYCVerification.tsx
+
+// 🔹 Upload to Supabase Storage
+const handleDocumentUpload = async () => {
     if (!user || !documentForm.documentFile) return;
 
     setIsLoading(true);
     const file = documentForm.documentFile;
     const fileExt = file.name.split('.').pop();
+    // This is the permanent path in Storage, which we must save!
     const filePath = `${user.id}/${documentForm.documentType}_${Date.now()}.${fileExt}`;
 
     try {
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('kyc-bucket')
-        .upload(filePath, file, { upsert: true });
+        // 1. Upload to storage (same as before)
+        const { error: uploadError } = await supabase.storage
+            .from('kyc-bucket') 
+            .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('kyc-bucket')
-        .getPublicUrl(filePath);
+        // 2. Generate a permanent PUBLIC URL (No RLS needed, no expiration)
+        const { data: publicData } = supabase.storage
+            .from('kyc-bucket')
+            .getPublicUrl(filePath); // 🟢 NEW: Use getPublicUrl
 
-      // Save record
-      const { error: insertError } = await supabase
-        .from('kyc_documents')
-        .insert({
-          user_id: user.id,
-          document_type: documentForm.documentType,
-          document_url: publicUrl,
-          status: 'pending'
-        });
+        // 3. Save record to DB: Save the permanent PUBLIC URL and the path
+        const { error: insertError } = await supabase
+            .from('kyc_documents')
+            .insert({
+                user_id: user.id,
+                document_type: documentForm.documentType,
+                // 🛑 CRITICAL CHANGE: Save the permanent Public URL here
+                document_url: publicData.publicUrl, 
+                file_path: filePath, 
+                status: 'pending'
+            });
 
-      if (insertError) throw insertError;
+        if (insertError) throw insertError;
 
-      toast.success(`${documentForm.documentType.replace('_', ' ')} uploaded successfully!`);
-      setDocumentForm({ documentType: 'passport', documentFile: null });
-      fetchDocuments();
-
-      const fileInput = document.getElementById('document-file') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+        toast.success(`${documentForm.documentType.replace('_', ' ')} uploaded successfully!`);
+        fetchDocuments(); // Re-fetch list to show the new document
+        
     } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload document.');
+        console.error('Upload error:', error);
+        toast.error(`Upload failed: ${error.message || 'Check network.'}`);
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
-
+};
   // 🔹 Utility: status icons and styles
   const getStatusIcon = (status: string) => {
     switch (status) {

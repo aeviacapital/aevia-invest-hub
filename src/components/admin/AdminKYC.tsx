@@ -56,7 +56,7 @@ export const AdminKYC = () => {
       // Fetch KYC documents
       const { data: kycData, error: kycError } = await supabase
         .from('kyc_documents')
-        .select('*')
+        .select('*, file_path')
         .order('created_at', { ascending: false });
 
       if (kycError) throw kycError;
@@ -155,6 +155,54 @@ export const AdminKYC = () => {
       </div>
     );
   }
+  // Inside AdminKYC.tsx component
+
+const generateAndOpenPublicUrl = (filePath: string) => {
+    if (!filePath) {
+        toast({ title: "Error", description: "Document file path is missing.", variant: "destructive" });
+        return;
+    }
+    
+    // Use the standard client to get the Public URL
+    const { data } = supabase.storage 
+        .from('kyc-bucket') 
+        .getPublicUrl(filePath); // <-- Simple, immediate public URL
+
+    if (data && data.publicUrl) {
+        window.open(data.publicUrl, '_blank');
+    } else {
+        toast({ title: 'Error', description: 'Failed to generate public link.', variant: "destructive" });
+    }
+};
+  // Inside AdminKYC component
+const generateAndOpenSignedUrl = async (filePath: string) => {
+    if (!filePath) {
+        toast({ title: "Error", description: "Document file path is missing.", variant: "destructive" });
+        return;
+    }
+    console.log("Attempting to generate signed URL for path:", filePath);
+
+    try {
+        // Use the service_role key if available for Admin operations, or rely on RLS if authenticated role has storage read access.
+        // Assuming the Admin is logged in as an authenticated user, we use the regular client:
+        const { data, error } = await supabase.storage
+            .from('kyc-bucket') // MUST use the correct bucket ID
+            .createSignedUrl(filePath, 3600); // New URL valid for 1 hour (3600 seconds)
+
+        if (error) throw error;
+
+        // Open the valid URL in a new window
+        window.open(data.signedUrl, '_blank');
+
+    } catch (error) {
+        console.error('Error generating signed URL:', error);
+        toast({
+            title: 'Error',
+            description: `Failed to view document: ${error.message || 'Check storage permissions.'}`,
+            variant: 'destructive',
+        });
+    }
+};
 
   return (
     <div className="space-y-6">
@@ -237,7 +285,7 @@ export const AdminKYC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(document.document_url, '_blank')}
+                          onClick={() =>  generateAndOpenPublicUrl (document.file_path)}
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           View
