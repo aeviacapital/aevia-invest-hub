@@ -16,36 +16,58 @@ const Referrals = () => {
   });
   const [referralsList, setReferralsList] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (profile?.referral_code) {
-      setReferralCode(profile.referral_code);
+useEffect(() => {
+  if (!user) return;
+  fetchReferralData();
+}, [user]);
+
+const fetchReferralData = async () => {
+  try {
+    // 1️⃣ Get the referral code directly from Supabase
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('referral_code')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching referral code:', profileError);
+      return;
     }
-    fetchReferralStats();
-  }, [profile]);
 
-  const fetchReferralStats = async () => {
-    if (!user) return;
+    if (profileData?.referral_code) {
+      setReferralCode(profileData.referral_code);
+    } else {
+      setReferralCode('N/A');
+    }
 
-    const { data: referrals, error } = await supabase
+    // 2️⃣ Fetch referral stats
+    const { data: referrals, error: referralsError } = await supabase
       .from('referrals')
       .select('*, referred:referred_id(full_name, email)')
       .eq('referrer_id', user.id);
 
-    if (error) {
-      console.error('Error fetching referrals:', error);
+    if (referralsError) {
+      console.error('Error fetching referrals:', referralsError);
       return;
     }
 
-    if (referrals) {
-      setReferralsList(referrals);
-      const totalBonus = referrals.reduce((sum, ref) => sum + parseFloat(ref.bonus_earned?.toString() || '0'), 0);
-      setReferralStats({
-        totalReferrals: referrals.length,
-        totalBonus
-      });
-    }
-  };
+    setReferralsList(referrals || []);
+    const totalBonus = referrals.reduce(
+      (sum, ref) => sum + parseFloat(ref.bonus_earned?.toString() || '0'),
+      0
+    );
 
+    setReferralStats({
+      totalReferrals: referrals.length,
+      totalBonus,
+    });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    toast.error('An unexpected error occurred');
+  }
+};
+  
   const copyReferralLink = () => {
     const referralLink = `${window.location.origin}/auth?ref=${referralCode}`;
     navigator.clipboard.writeText(referralLink);
