@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Phone, MapPin, Calendar, Camera, Save } from 'lucide-react';
+import {  useEffect } from 'react'; 
+
 
 const Profile = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -75,6 +77,14 @@ const Profile = () => {
     });
     setIsEditing(false);
   };
+
+
+  useEffect(() => {
+    // When this component loads, fetch the latest data
+    if (user) {
+      refreshProfile();
+    }
+  }, [user]);
 
   return (
     <div className="space-y-6">
