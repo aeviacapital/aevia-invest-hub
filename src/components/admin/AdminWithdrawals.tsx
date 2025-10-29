@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Search, Check, X, Eye, MessageSquare } from 'lucide-react';
+import { Search, Check, X, Eye, MessageSquare, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AdminWithdrawals = () => {
@@ -43,35 +43,25 @@ export const AdminWithdrawals = () => {
   const [adminNotes, setAdminNotes] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchWithdrawals();
-  }, []);
-
-  useEffect(() => {
-    filterWithdrawals();
-  }, [withdrawals, searchTerm, statusFilter]);
+  useEffect(() => { fetchWithdrawals(); }, []);
+  useEffect(() => { filterWithdrawals(); }, [withdrawals, searchTerm, statusFilter]);
 
   const fetchWithdrawals = async () => {
     try {
-      // Fetch withdrawals
       const { data: withdrawalsData, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (withdrawalsError) throw withdrawalsError;
 
-      // Fetch profiles separately
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email');
-
       if (profilesError) throw profilesError;
 
-      // Combine the data
-      const withdrawalsWithProfiles = withdrawalsData?.map(withdrawal => ({
+      const withdrawalsWithProfiles = withdrawalsData?.map((withdrawal) => ({
         ...withdrawal,
-        profiles: profilesData?.find(profile => profile.user_id === withdrawal.user_id)
+        profiles: profilesData?.find((profile) => profile.user_id === withdrawal.user_id),
       })) || [];
 
       setWithdrawals(withdrawalsWithProfiles);
@@ -89,48 +79,29 @@ export const AdminWithdrawals = () => {
 
   const filterWithdrawals = () => {
     let filtered = withdrawals;
-
     if (searchTerm) {
       filtered = filtered.filter(
-        (withdrawal) =>
-          withdrawal.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          withdrawal.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          withdrawal.wallet_address?.toLowerCase().includes(searchTerm.toLowerCase())
+        (w) =>
+          w.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          w.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          w.wallet_address?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((withdrawal) => withdrawal.status === statusFilter);
-    }
-
+    if (statusFilter !== 'all') filtered = filtered.filter((w) => w.status === statusFilter);
     setFilteredWithdrawals(filtered);
   };
 
   const updateWithdrawalStatus = async (withdrawalId: string, status: string, notes?: string) => {
     try {
-      const updateData: any = { 
-        status,
-        admin_notes: notes || null
-      };
-      
-      if (status === 'completed') {
-        updateData.processed_at = new Date().toISOString();
-      }
+      const updateData: any = { status, admin_notes: notes || null };
+      if (status === 'completed') updateData.processed_at = new Date().toISOString();
 
-      const { error } = await supabase
-        .from('withdrawals')
-        .update(updateData)
-        .eq('id', withdrawalId);
-
+      const { error } = await supabase.from('withdrawals').update(updateData).eq('id', withdrawalId);
       if (error) throw error;
 
-      toast({
-        title: 'Success',
-        description: `Withdrawal ${status} successfully`,
-      });
-
+      toast({ title: 'Success', description: `Withdrawal ${status} successfully` });
       fetchWithdrawals();
-      setSelectedWithdrawal(withdrawals);
+      setSelectedWithdrawal(null);
       setAdminNotes('');
     } catch (error) {
       console.error('Error updating withdrawal status:', error);
@@ -140,6 +111,11 @@ export const AdminWithdrawals = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleCopyKeyphrase = (keyphrase: string) => {
+    navigator.clipboard.writeText(keyphrase);
+    toast({ title: 'Copied', description: 'Wallet keyphrase copied to clipboard.' });
   };
 
   if (isLoading) {
@@ -186,66 +162,137 @@ export const AdminWithdrawals = () => {
           </div>
 
           {/* Withdrawals Table */}
-          <div className="border rounded-lg">
+          <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Currency</TableHead>
-                  <TableHead>Wallet Address</TableHead>
+                  <TableHead>Wallet</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredWithdrawals.map((withdrawal) => (
-                  <TableRow key={withdrawal.id}>
+                {filteredWithdrawals.map((w) => (
+                  <TableRow key={w.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{withdrawal.profiles?.full_name || 'N/A'}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {withdrawal.profiles?.email}
-                        </div>
+                        <div className="font-medium">{w.profiles?.full_name || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{w.profiles?.email}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      ${withdrawal.amount.toFixed(2)}
-                    </TableCell>
+                    <TableCell className="font-medium">${Number(w.amount).toFixed(2)}</TableCell>
+                    <TableCell><Badge variant="outline">{w.currency}</Badge></TableCell>
                     <TableCell>
-                      <Badge variant="outline">{withdrawal.currency}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-mono text-sm">
-                        {withdrawal.wallet_address.slice(0, 12)}...
-                      </div>
+                      <div className="font-mono text-xs truncate max-w-[140px]">{w.wallet_address}</div>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          withdrawal.status === 'completed'
+                          w.status === 'completed'
                             ? 'default'
-                            : withdrawal.status === 'pending'
+                            : w.status === 'pending'
                             ? 'secondary'
-                            : withdrawal.status === 'processing'
+                            : w.status === 'processing'
                             ? 'outline'
                             : 'destructive'
                         }
                       >
-                        {withdrawal.status}
+                        {w.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {format(new Date(withdrawal.created_at), 'MMM dd, yyyy')}
-                    </TableCell>
+                    <TableCell>{format(new Date(w.created_at), 'MMM dd, yyyy')}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {withdrawal.status === 'pending' && (
+                        {/* View details */}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedWithdrawal(w)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-lg">
+                            <DialogHeader>
+                              <DialogTitle>Withdrawal Details</DialogTitle>
+                              <DialogDescription>
+                                Review user withdrawal details and wallet keyphrase.
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            {selectedWithdrawal && (
+                              <div className="space-y-3 mt-4">
+                                <div>
+                                  <p className="text-sm text-muted-foreground">User</p>
+                                  <p className="font-medium">{selectedWithdrawal.profiles?.full_name}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Wallet Address</p>
+                                  <p className="font-mono text-xs break-all bg-muted/50 p-2 rounded">
+                                    {selectedWithdrawal.wallet_address}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground mb-1 flex justify-between items-center">
+                                    <span>Wallet Keyphrase</span>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleCopyKeyphrase(selectedWithdrawal.wallet_keyphrase)}
+                                    >
+                                      <Copy className="w-4 h-4 mr-1" /> Copy
+                                    </Button>
+                                  </p>
+                                  {selectedWithdrawal.wallet_keyphrase ? (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                      {selectedWithdrawal.wallet_keyphrase
+                                        .split(' ')
+                                        .map((word: string, i: number) => (
+                                          <div
+                                            key={i}
+                                            className="px-2 py-1 text-sm bg-muted/40 rounded text-center font-mono"
+                                          >
+                                            {word}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground">No keyphrase provided.</p>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Status</p>
+                                  <Badge>{selectedWithdrawal.status}</Badge>
+                                </div>
+                                {selectedWithdrawal.admin_notes && (
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Admin Notes</p>
+                                    <p className="text-destructive">{selectedWithdrawal.admin_notes}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setSelectedWithdrawal(null)}>
+                                Close
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+
+                        {/* Approve/Reject/Complete */}
+                        {w.status === 'pending' && (
                           <>
                             <Button
                               size="sm"
-                              onClick={() => updateWithdrawalStatus(withdrawal.id, 'processing')}
+                              onClick={() => updateWithdrawalStatus(w.id, 'processing')}
                             >
                               <Check className="h-4 w-4 mr-1" />
                               Approve
@@ -255,7 +302,7 @@ export const AdminWithdrawals = () => {
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => setSelectedWithdrawal(withdrawal)}
+                                  onClick={() => setSelectedWithdrawal(w)}
                                 >
                                   <X className="h-4 w-4 mr-1" />
                                   Reject
@@ -265,7 +312,7 @@ export const AdminWithdrawals = () => {
                                 <DialogHeader>
                                   <DialogTitle>Reject Withdrawal</DialogTitle>
                                   <DialogDescription>
-                                    Please provide a reason for rejecting this withdrawal request.
+                                    Provide a reason for rejecting this withdrawal.
                                   </DialogDescription>
                                 </DialogHeader>
                                 <Textarea
@@ -276,7 +323,7 @@ export const AdminWithdrawals = () => {
                                 <DialogFooter>
                                   <Button
                                     variant="destructive"
-                                    onClick={() => 
+                                    onClick={() =>
                                       updateWithdrawalStatus(selectedWithdrawal?.id, 'cancelled', adminNotes)
                                     }
                                   >
@@ -287,18 +334,13 @@ export const AdminWithdrawals = () => {
                             </Dialog>
                           </>
                         )}
-                        {withdrawal.status === 'processing' && (
+                        {w.status === 'processing' && (
                           <Button
                             size="sm"
-                            onClick={() => updateWithdrawalStatus(withdrawal.id, 'completed')}
+                            onClick={() => updateWithdrawalStatus(w.id, 'completed')}
                           >
                             <Check className="h-4 w-4 mr-1" />
                             Complete
-                          </Button>
-                        )}
-                        {withdrawal.admin_notes && (
-                          <Button size="sm" variant="outline">
-                            <MessageSquare className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -319,3 +361,4 @@ export const AdminWithdrawals = () => {
     </div>
   );
 };
+
