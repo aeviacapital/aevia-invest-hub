@@ -174,9 +174,9 @@ const Dashboard = () => {
         )}
 
         {/* Main Dashboard Tabs */}
-        <Tabs defaultValue="trading" className="w-full">
-          <div className="w-full overflow-x-auto -mx-4 px-4 pb-2">
-            <TabsList className="w-full flex justify-start md:justify-center">
+        <Tabs  className="w-full">
+          <div className="w-full overflow-x-auto mx-4 px-4 pb-2 ">
+            <TabsList className="w-full flex justify-start md:justify-center bg-transparent-500">
               <TabsTrigger value="trading">Trading</TabsTrigger>
               <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
               <TabsTrigger value="investments">Investments</TabsTrigger>
