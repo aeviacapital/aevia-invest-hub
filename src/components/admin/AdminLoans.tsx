@@ -10,14 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Edit, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 
 interface Loan {
   id: string;
   user_id: string;
   principal_amount: number;
   interest_rate: number;
-  loan_term_months: number;
+  loan_term_days: number;
   repayment_schedule: string;
   collateral: string | null;
   credit_requirements: string | null;
@@ -41,7 +41,7 @@ export const AdminLoans = () => {
     user_id: '',
     principal_amount: '',
     interest_rate: '',
-    loan_term_months: '',
+    loan_term_days: '',
     repayment_schedule: '',
     collateral: '',
     credit_requirements: '',
@@ -66,21 +66,21 @@ export const AdminLoans = () => {
 
     if (error) {
       toast.error('Failed to fetch loans');
+      console.error(error);
       return;
     }
 
-    // Fetch user profiles separately
     if (data && data.length > 0) {
-      const userIds = data.map(loan => loan.user_id);
+      const userIds = data.map((loan) => loan.user_id);
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('user_id, email, full_name')
         .in('user_id', userIds);
 
-      const profileMap = new Map(profilesData?.map(p => [p.user_id, p]));
-      const loansWithProfiles = data.map(loan => ({
+      const profileMap = new Map(profilesData?.map((p) => [p.user_id, p]));
+      const loansWithProfiles = data.map((loan) => ({
         ...loan,
-        profiles: profileMap.get(loan.user_id)
+        profiles: profileMap.get(loan.user_id),
       }));
       setLoans(loansWithProfiles as Loan[]);
     } else {
@@ -107,7 +107,7 @@ export const AdminLoans = () => {
       ...formData,
       principal_amount: parseFloat(formData.principal_amount),
       interest_rate: parseFloat(formData.interest_rate),
-      loan_term_months: parseInt(formData.loan_term_months),
+      loan_term_days: parseInt(formData.loan_term_days),
       fees_charges: parseFloat(formData.fees_charges) || 0,
     };
 
@@ -137,17 +137,44 @@ export const AdminLoans = () => {
     fetchLoans();
   };
 
-  const handleApprove = async (loanId: string) => {
-    const { error } = await supabase
+  const handleApprove = async (loanId: string, userId: string, amount: number) => {
+    console.log("checking loanid"); 
+    console.log(loanId); 
+    const { error: loanError } = await supabase
       .from('loans')
       .update({ status: 'approved', approved_at: new Date().toISOString() })
       .eq('id', loanId);
 
-    if (error) {
+    if (loanError) {
       toast.error('Failed to approve loan');
       return;
     }
-    toast.success('Loan approved');
+
+    // Update user wallet balance
+    const { data: wallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('user_id', userId)
+      .single();
+
+    if (walletError) {
+      toast.error('Failed to fetch wallet');
+      return;
+    }
+
+    const newBalance = (wallet?.balance || 0) + amount;
+
+    const { error: updateWalletError } = await supabase
+      .from('wallets')
+      .update({ balance: newBalance })
+      .eq('user_id', userId);
+
+    if (updateWalletError) {
+      toast.error('Failed to update wallet balance');
+      return;
+    }
+
+    toast.success('Loan approved and wallet updated');
     fetchLoans();
   };
 
@@ -165,12 +192,23 @@ export const AdminLoans = () => {
     fetchLoans();
   };
 
+  const handleDelete = async (loanId: string) => {
+    const { error } = await supabase.from('loans').delete().eq('id', loanId);
+
+    if (error) {
+      toast.error('Failed to delete loan');
+      return;
+    }
+    toast.success('Loan deleted successfully');
+    fetchLoans();
+  };
+
   const resetForm = () => {
     setFormData({
       user_id: '',
       principal_amount: '',
       interest_rate: '',
-      loan_term_months: '',
+      loan_term_days: '',
       repayment_schedule: '',
       collateral: '',
       credit_requirements: '',
@@ -190,7 +228,7 @@ export const AdminLoans = () => {
       user_id: loan.user_id,
       principal_amount: loan.principal_amount.toString(),
       interest_rate: loan.interest_rate.toString(),
-      loan_term_months: loan.loan_term_months.toString(),
+      loan_term_days: loan.loan_term_days.toString(),
       repayment_schedule: loan.repayment_schedule,
       collateral: loan.collateral || '',
       credit_requirements: loan.credit_requirements || '',
@@ -253,7 +291,7 @@ export const AdminLoans = () => {
                     required
                     value={formData.loan_type}
                     onChange={(e) => setFormData({ ...formData, loan_type: e.target.value })}
-                    placeholder="e.g., Personal, Business, Mortgage"
+                    placeholder="e.g., Personal, Business"
                   />
                 </div>
 
@@ -280,103 +318,21 @@ export const AdminLoans = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Loan Term (Months)</Label>
+                  <Label>Loan Term (Days)</Label>
                   <Input
                     required
                     type="number"
-                    value={formData.loan_term_months}
-                    onChange={(e) => setFormData({ ...formData, loan_term_months: e.target.value })}
+                    value={formData.loan_term_days}
+                    onChange={(e) => setFormData({ ...formData, loan_term_days: e.target.value })}
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Fees & Charges ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.fees_charges}
-                    onChange={(e) => setFormData({ ...formData, fees_charges: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Repayment Schedule</Label>
-                  <Input
-                    required
-                    value={formData.repayment_schedule}
-                    onChange={(e) => setFormData({ ...formData, repayment_schedule: e.target.value })}
-                    placeholder="e.g., Monthly, Weekly"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Collateral</Label>
-                <Textarea
-                  value={formData.collateral}
-                  onChange={(e) => setFormData({ ...formData, collateral: e.target.value })}
-                  placeholder="Describe collateral details"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Credit Requirements</Label>
-                <Textarea
-                  value={formData.credit_requirements}
-                  onChange={(e) => setFormData({ ...formData, credit_requirements: e.target.value })}
-                  placeholder="Credit score, history requirements"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Loan Agreement</Label>
-                <Textarea
-                  value={formData.loan_agreement}
-                  onChange={(e) => setFormData({ ...formData, loan_agreement: e.target.value })}
-                  placeholder="Agreement terms and conditions"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Disbursement Details</Label>
-                <Textarea
-                  value={formData.disbursement_details}
-                  onChange={(e) => setFormData({ ...formData, disbursement_details: e.target.value })}
-                  placeholder="How and when funds will be disbursed"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Default Terms</Label>
-                <Textarea
-                  value={formData.default_terms}
-                  onChange={(e) => setFormData({ ...formData, default_terms: e.target.value })}
-                  placeholder="Terms in case of default"
-                />
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingLoan ? 'Update' : 'Create'} Loan
-                </Button>
+                <Button type="submit">{editingLoan ? 'Update' : 'Create'} Loan</Button>
               </div>
             </form>
           </DialogContent>
@@ -394,8 +350,8 @@ export const AdminLoans = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Principal</TableHead>
-                <TableHead>Interest Rate</TableHead>
-                <TableHead>Term</TableHead>
+                <TableHead>Interest</TableHead>
+                <TableHead>Term (Days)</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -413,7 +369,7 @@ export const AdminLoans = () => {
                   <TableCell>{loan.loan_type}</TableCell>
                   <TableCell>${loan.principal_amount.toLocaleString()}</TableCell>
                   <TableCell>{loan.interest_rate}%</TableCell>
-                  <TableCell>{loan.loan_term_months} months</TableCell>
+                  <TableCell>{loan.loan_term_days} days</TableCell>
                   <TableCell>{getStatusBadge(loan.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -422,7 +378,7 @@ export const AdminLoans = () => {
                       </Button>
                       {loan.status === 'pending' && (
                         <>
-                          <Button size="sm" variant="default" onClick={() => handleApprove(loan.id)}>
+                          <Button size="sm" variant="default" onClick={() => handleApprove(loan.id, loan.user_id, loan.principal_amount)}>
                             <CheckCircle className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="destructive" onClick={() => handleReject(loan.id)}>
@@ -430,6 +386,9 @@ export const AdminLoans = () => {
                           </Button>
                         </>
                       )}
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(loan.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -441,3 +400,4 @@ export const AdminLoans = () => {
     </div>
   );
 };
+
