@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import Licenses from "./pages/Licenses"; 
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/licenses" element={<Licenses/>} />
+
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

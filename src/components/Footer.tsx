@@ -5,7 +5,7 @@ const Footer = () => {
 
   const footerLinks = {
     platform: [
-      { name: "Trading Simulation", href: "#" },
+      { name: "Crypto Currency Trading", href: "#" },
       { name: "Copy Trading", href: "#" },
       { name: "Investment Plans", href: "#" },
       { name: "Portfolio Analytics", href: "#" }

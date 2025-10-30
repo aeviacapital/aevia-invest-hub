@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // ADDED useRef
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Phone, MapPin, Calendar, Camera, Save } from 'lucide-react';
-import {  useEffect } from 'react'; 
-
+import { User, Mail, Phone, MapPin, Calendar, Camera, Save, Upload } from 'lucide-react'; // ADDED Upload icon
 
 const Profile = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -23,6 +21,31 @@ const Profile = () => {
     country: profile?.country || '',
     dateOfBirth: profile?.date_of_birth || ''
   });
+  // NEW STATE: To manage the avatar URL and its local display
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
+  // NEW REF: To link the camera button to the hidden file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync profile data and avatar URL when profile loads/updates
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        fullName: profile.full_name || '',
+        phone: profile.phone || '',
+        country: profile.country || '',
+        dateOfBirth: profile.date_of_birth || ''
+      });
+      // Sync local avatar state with global profile state
+      setAvatarUrl(profile.avatar_url); 
+    }
+  }, [profile]);
+  
+  // Existing useEffect for initial load
+  useEffect(() => {
+    if (user) {
+      refreshProfile();
+    }
+  }, [user, refreshProfile]); // Added refreshProfile to dependency array
 
   const handleInputChange = (field: string, value: string) => {
     setProfileForm(prev => ({
@@ -34,7 +57,8 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     if (!user) return;
 
-    setIsLoading(true);
+    // Use current state for loading, which prevents other actions
+    setIsLoading(true); 
 
     try {
       const { error } = await supabase
@@ -43,7 +67,9 @@ const Profile = () => {
           full_name: profileForm.fullName,
           phone: profileForm.phone,
           country: profileForm.country,
-          date_of_birth: profileForm.dateOfBirth || null
+          date_of_birth: profileForm.dateOfBirth || null,
+          // IMPORTANT: Ensure the latest avatarUrl is saved along with other fields
+          avatar_url: avatarUrl 
         })
         .eq('user_id', user.id);
 
@@ -60,31 +86,98 @@ const Profile = () => {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to save profile changes.',
         variant: 'destructive'
       });
     }
 
     setIsLoading(false);
   };
-
+  
   const handleCancelEdit = () => {
+    // Revert form state
     setProfileForm({
       fullName: profile?.full_name || '',
       phone: profile?.phone || '',
       country: profile?.country || '',
       dateOfBirth: profile?.date_of_birth || ''
     });
+    // Revert avatar URL state
+    setAvatarUrl(profile?.avatar_url || null);
     setIsEditing(false);
   };
 
-
-  useEffect(() => {
-    // When this component loads, fetch the latest data
-    if (user) {
-      refreshProfile();
+  // NEW FUNCTION: Triggers the hidden file input
+  const handleAvatarButtonClick = () => {
+    if (isEditing && fileInputRef.current) {
+      fileInputRef.current.click();
     }
-  }, [user]);
+  };
+
+  // NEW FUNCTION: Handles file upload to Supabase Storage and database update
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !event.target.files || event.target.files.length === 0) {
+      return;
+    }
+
+    setIsLoading(true);
+    const file = event.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    // Unique path in Storage: user ID / random file name
+    const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+
+    try {
+      // 1. Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars') // !!! MUST be the name of your bucket !!!
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      if (publicUrlData) {
+        const newAvatarUrl = publicUrlData.publicUrl;
+        
+        // 3. Update the profiles table with the new URL
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: newAvatarUrl })
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+        
+        // Update local state and refresh context
+        setAvatarUrl(newAvatarUrl); 
+        await refreshProfile(); 
+        
+        toast({
+          title: 'Avatar Updated',
+          description: 'Your profile picture has been updated successfully.',
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to upload avatar.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+      // Clear the input value so the same file can be uploaded again if needed
+      if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -104,18 +197,32 @@ const Profile = () => {
           <div className="flex items-center space-x-6">
             <div className="relative">
               <Avatar className="w-24 h-24">
-                <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                {/* USE avatarUrl STATE for immediate display */}
+                <AvatarImage src={avatarUrl || undefined} alt={profile?.full_name} /> 
                 <AvatarFallback className="text-lg">
                   {profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
+              
+              {/* HIDDEN FILE INPUT */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/*"
+                style={{ display: 'none' }}
+                disabled={!isEditing || isLoading}
+              />
+
               <Button
                 variant="outline"
                 size="sm"
                 className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-                disabled
+                // ENABLED ONLY WHEN EDITING
+                onClick={handleAvatarButtonClick}
+                disabled={!isEditing || isLoading} 
               >
-                <Camera className="w-4 h-4" />
+                {isLoading ? <Upload className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
               </Button>
             </div>
             <div>
@@ -131,7 +238,6 @@ const Profile = () => {
               </div>
             </div>
           </div>
-
           {/* Profile Form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -148,7 +254,6 @@ const Profile = () => {
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
@@ -164,7 +269,6 @@ const Profile = () => {
                   Email cannot be changed. Contact support if needed.
                 </p>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <div className="relative">
@@ -180,7 +284,6 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
@@ -196,7 +299,6 @@ const Profile = () => {
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
                 <div className="relative">
@@ -211,7 +313,6 @@ const Profile = () => {
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>Account Created</Label>
                 <div className="relative">
@@ -225,12 +326,11 @@ const Profile = () => {
               </div>
             </div>
           </div>
-
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3">
             {isEditing ? (
               <>
-                <Button variant="outline" onClick={handleCancelEdit}>
+                <Button variant="outline" onClick={handleCancelEdit} disabled={isLoading}>
                   Cancel
                 </Button>
                 <Button 
@@ -254,7 +354,6 @@ const Profile = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Account Statistics */}
       <Card className="card-glass">
         <CardHeader>
@@ -281,7 +380,6 @@ const Profile = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Security Settings */}
       <Card className="card-glass">
         <CardHeader>
@@ -331,5 +429,4 @@ const Profile = () => {
     </div>
   );
 };
-
 export default Profile;

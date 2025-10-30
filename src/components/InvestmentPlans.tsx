@@ -31,8 +31,8 @@ const InvestmentPlans = () => {
       dailyReturn: "9.6%",
       duration: "7 days",
       referralBonus: "10%",
-      riskLevel: "Medium",
-      riskColor: "bg-warning",
+      riskLevel: "low",
+      riskColor: "bg-success",
       features: ["Daily 9.6% returns", "7-day investment cycle", "10% referral bonus", "Priority support"]
     },
     {
@@ -46,8 +46,8 @@ const InvestmentPlans = () => {
       dailyReturn: "20.9%",
       duration: "4 days",
       referralBonus: "—",
-      riskLevel: "High",
-      riskColor: "bg-primary",
+      riskLevel: "low",
+      riskColor: "bg-success",
       features: ["Daily 20.9% returns", "4-day investment cycle", "Dedicated account manager", "Custom solutions"]
     }
   ];

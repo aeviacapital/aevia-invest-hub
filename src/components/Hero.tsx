@@ -1,8 +1,10 @@
 import { ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroPhoneMockup from "@/assets/hero-phone-mockup.jpg";
+import heroPhoneMockup from "@/assets/aeviadashboard.jpg";
+import {useNavigate} from "react-router-dom"; 
 
 const Hero = () => {
+  const navigate = useNavigate(); 
   return (
     <section id="home" className="pt-20 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
       <div className="container mx-auto px-4">
@@ -27,12 +29,12 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Button className="btn-hero group">
+              <Button className="btn-hero group" onClick ={()=>navigate("/auth")} >
                 Get Started
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="outline" size="lg" className="border-border hover:border-primary">
-                Watch Demo
+              <Button variant="outline" size="lg" className="border-border hover:border-primary" onClick={()=>{navigate("/auth")}}>
+                Sign in
               </Button>
             </div>
 

@@ -78,12 +78,13 @@ const FAQ = () => {
             Still have questions? Our team is here to help.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="mailto:support@aeviacapital.com"
-              className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-            >
-              Contact Support
-            </a>
+
+           <a
+  href="https://wa.me/+447946189968"
+  className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+>
+  Message us on WhatsApp
+</a> 
             <a 
               href="#"
               className="inline-flex items-center justify-center px-6 py-3 border border-border rounded-lg font-medium hover:border-primary hover:text-primary transition-colors"
