@@ -14,6 +14,7 @@ import { LogOut, Settings, User, Bell, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationsPanel } from './NotificationsPanel';
 import { supabase } from '@/integrations/supabase/client';
+import {Link} from 'react-router-dom'; 
 
 const DashboardNavbar = () => {
   const { user, profile, signOut } = useAuth();
@@ -100,13 +101,14 @@ const DashboardNavbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/')}
-              className="text-xl font-bold text-gradient-primary hover:bg-transparent"
-            >
-              AeviaCapital
-            </Button>
+          <Link to="/" className="flex items-center space-x-2">
+  <img 
+    src="/logo.png" 
+    alt="Aevia Capital Logo"
+    className="h-20 sm:h-22 w-auto" // Set the height and auto-scale the width
+  />
+  </Link>
+
             <Badge variant="outline" className="bg-primary/10">
               Dashboard
             </Badge>
