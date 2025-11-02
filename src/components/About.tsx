@@ -22,22 +22,22 @@ const coreValues = [
 
 const teamMembers = [
     { 
-        name: "james hamilton", 
+        name: "Ellis Kian Ferguson", 
         title: "Chief Executive Officer", 
         bio: "Over 20 years of experience in fund management and macro strategy.",
-        image: "/man1.jpg"
+        image: "/man1.jpeg"
     },
     { 
-        name: "Julia Roberts", 
+        name: "Sorina Ileana Dragomir", 
         title: "Chief Investment Officer", 
         bio: "Specializes in algorithmic trading and risk mitigation.",
-        image: "/woman1.jpg"
+        image: "/man2.jpeg"
     },
     { 
-        name: "David Lee", 
+        name: "Teresa Dahlberg", 
         title: "Head of Client Relations", 
         bio: "Focused on building lasting partnerships and tailored client solutions.",
-        image: "/man2.jpg"
+        image: "/woman1.jpeg"
     },
 ];
 

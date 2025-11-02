@@ -84,7 +84,8 @@ export const AdminWithdrawals = () => {
         (w) =>
           w.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           w.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.wallet_address?.toLowerCase().includes(searchTerm.toLowerCase())
+          w.wallet_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          w.wallet_type?.toLowerCase().includes(searchTerm.toLowerCase()) // <-- ADDED search by wallet type
       );
     }
     if (statusFilter !== 'all') filtered = filtered.filter((w) => w.status === statusFilter);
@@ -169,7 +170,8 @@ export const AdminWithdrawals = () => {
                   <TableHead>User</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Currency</TableHead>
-                  <TableHead>Wallet</TableHead>
+                  <TableHead>Wallet Type</TableHead> {/* <-- ADDED TABLE HEAD */}
+                  <TableHead>Wallet Address</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Actions</TableHead>
@@ -186,6 +188,11 @@ export const AdminWithdrawals = () => {
                     </TableCell>
                     <TableCell className="font-medium">${Number(w.amount).toFixed(2)}</TableCell>
                     <TableCell><Badge variant="outline">{w.currency}</Badge></TableCell>
+                    {/* <-- ADDED TABLE CELL FOR WALLET TYPE --> */}
+                    <TableCell>
+                      <Badge variant="secondary">{w.wallet_type || 'N/A'}</Badge>
+                    </TableCell>
+                    {/* <-- END ADDED TABLE CELL --> */}
                     <TableCell>
                       <div className="font-mono text-xs truncate max-w-[140px]">{w.wallet_address}</div>
                     </TableCell>
@@ -233,6 +240,12 @@ export const AdminWithdrawals = () => {
                                   <p className="text-sm text-muted-foreground">User</p>
                                   <p className="font-medium">{selectedWithdrawal.profiles?.full_name}</p>
                                 </div>
+                                {/* <-- ADDED WALLET TYPE TO DIALOG --> */}
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Wallet Type</p>
+                                  <Badge className="text-sm">{selectedWithdrawal.wallet_type || 'N/A'}</Badge>
+                                </div>
+                                {/* <-- END ADDED WALLET TYPE TO DIALOG --> */}
                                 <div>
                                   <p className="text-sm text-muted-foreground">Wallet Address</p>
                                   <p className="font-mono text-xs break-all bg-muted/50 p-2 rounded">
@@ -361,4 +374,3 @@ export const AdminWithdrawals = () => {
     </div>
   );
 };
-

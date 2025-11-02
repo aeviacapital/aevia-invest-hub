@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,10 +17,12 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
+// Removed Select imports
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { CreditCard, Plus } from 'lucide-react';
+import { CreditCard, Plus, FileText, User, Briefcase } from 'lucide-react'; // Added User and Briefcase icons
 import { format, differenceInDays } from 'date-fns';
+import { cn } from '@/lib/utils'; // Assuming you have a utility for combining classes
 
 interface Loan {
   id: string;
@@ -36,26 +38,46 @@ interface Loan {
   due_date: string | null;
 }
 
+// ⚙️ Configuration for different loan types
+const LOAN_CONFIG = {
+  PERSONAL: {
+    key: 'PERSONAL',
+    label: 'Personal Loan',
+    icon: User,
+    interestRate: 5.5, // 5.5% annual interest example
+    termsUrl: '/documents/personal_loan_terms.pdf', // Placeholder URL
+  },
+  BUSINESS: {
+    key: 'BUSINESS',
+    label: 'Business Loan',
+    icon: Briefcase,
+    interestRate: 8.0, // 8.0% annual interest example
+    termsUrl: '/documents/business_loan_terms.pdf', // Placeholder URL
+  },
+};
+
 export const Loans = () => {
   const { user } = useAuth();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loanForm, setLoanForm] = useState({
     principal_amount: '',
-    interest_rate: '',
     loan_term_days: '',
     repayment_schedule: '',
-    loan_type: '',
+    loan_type: 'PERSONAL', // Default to PERSONAL
     due_date: '',
-    acceptedTerms: false
+    acceptedTerms: false,
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
+  
+  const currentInterestRate = LOAN_CONFIG[loanForm.loan_type as keyof typeof LOAN_CONFIG]?.interestRate || 0;
 
   useEffect(() => {
     if (user) fetchLoans();
   }, [user]);
 
-  const fetchLoans = async () => {
+  const fetchLoans = useCallback(async () => {
     if (!user) return;
 
     const { data, error } = await supabase
@@ -70,14 +92,29 @@ export const Loans = () => {
     }
 
     setLoans(data || []);
-  };
+  }, [user]);
 
   const handleInputChange = (key: string, value: string | boolean) => {
-    setLoanForm({ ...loanForm, [key]: value });
+    setLoanForm((prevForm) => ({ ...prevForm, [key]: value }));
+  };
+
+  const handleLoanTypeChange = (value: string) => {
+    // Reset terms acceptance when changing loan type, since terms might change
+    setLoanForm((prevForm) => ({
+      ...prevForm,
+      loan_type: value,
+      acceptedTerms: false, 
+    }));
   };
 
   const submitLoanRequest = async () => {
     if (!user) return;
+
+    // 🔒 Validation Check for required fields
+    if (!loanForm.principal_amount || !loanForm.loan_term_days || !loanForm.due_date || !loanForm.loan_type) {
+        toast.error('Please fill in all required fields.');
+        return;
+    }
 
     if (!loanForm.acceptedTerms) {
       toast.error('You must accept the Terms and Conditions.');
@@ -90,7 +127,8 @@ export const Loans = () => {
       {
         user_id: user.id,
         principal_amount: parseFloat(loanForm.principal_amount),
-        interest_rate: parseFloat(loanForm.interest_rate),
+        // 🔑 Use the dynamically determined interest rate
+        interest_rate: currentInterestRate, 
         loan_term_days: parseInt(loanForm.loan_term_days),
         repayment_schedule: loanForm.repayment_schedule,
         loan_type: loanForm.loan_type,
@@ -103,17 +141,18 @@ export const Loans = () => {
     setIsDialogOpen(false);
 
     if (error) {
+      console.error('Submission error:', error);
       toast.error('Failed to submit loan request');
       return;
     }
 
     toast.success('Loan request submitted successfully');
 
-    // 🔔 Notify admin of new loan request
+    // 🔔 Admin Notification Logic (unchanged)
     const { data: admins } = await supabase
       .from('profiles')
       .select('id')
-      .eq('role', 'admin'); // assuming you store admin roles
+      .eq('role', 'admin'); 
 
     if (admins && admins.length > 0) {
       for (const admin of admins) {
@@ -121,7 +160,7 @@ export const Loans = () => {
           {
             user_id: admin.id,
             title: 'New Loan Request',
-            message: `${user.email || 'A user'} has requested a loan.`,
+            message: `${user.email || 'A user'} has requested a ${loanForm.loan_type} loan.`,
             type: 'loan_request',
             sent_by: user.id,
           },
@@ -129,12 +168,12 @@ export const Loans = () => {
       }
     }
 
+    // Reset Form
     setLoanForm({
       principal_amount: '',
-      interest_rate: '',
       loan_term_days: '',
       repayment_schedule: '',
-      loan_type: '',
+      loan_type: 'PERSONAL',
       due_date: '',
       acceptedTerms: false,
     });
@@ -162,6 +201,53 @@ export const Loans = () => {
     return Math.min((elapsed / totalDays) * 100, 100);
   };
 
+  // 📝 Component for viewing the Terms & Conditions
+  const TermsAndConditionsDialog = ({ loanType }: { loanType: string }) => {
+    const config = LOAN_CONFIG[loanType as keyof typeof LOAN_CONFIG];
+    
+    // Safety check
+    if (!config) return null;
+
+    return (
+      <Dialog open={isTermsDialogOpen} onOpenChange={setIsTermsDialogOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{config.label} Terms and Conditions</DialogTitle>
+            <DialogDescription>
+              Please review the binding terms for your selected loan type.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm max-h-[70vh] overflow-y-auto p-4 border rounded-md">
+            {/* ⚠️ IMPORTANT: In a real app, you would fetch and render the actual content here. */}
+            <p className="font-semibold text-lg">{config.label} Summary</p>
+            <p>
+              **Interest Rate:** {config.interestRate}% Annual Percentage Rate (APR).
+            </p>
+            <p>
+              **Repayment:** All principal and accrued interest must be repaid by the stipulated due date. Late payments will incur a 1% daily penalty on the outstanding balance.
+            </p>
+            <p>
+              **Collateral:** [Specifics for this loan type, e.g., Unsecured Personal Loan or Business Asset Collateral].
+            </p>
+            <p className="font-semibold mt-4">Full Document Access</p>
+            <Button asChild variant="outline">
+              <a href={config.termsUrl} target="_blank" rel="noopener noreferrer">
+                <FileText className="h-4 w-4 mr-2" /> View Full PDF Document
+              </a>
+            </Button>
+            
+            <p className="mt-4 text-xs text-muted-foreground">
+              By accepting, you agree to these terms. Failure to comply may result in legal action or default reporting.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsTermsDialogOpen(false)}>Close and Return</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="space-y-8">
       <Card className="p-4">
@@ -177,90 +263,127 @@ export const Loans = () => {
                 Request Loan
               </Button>
             </DialogTrigger>
-<DialogContent className="max-h-[85vh] overflow-y-auto">
-  <DialogHeader>
-    <DialogTitle>Request a Loan</DialogTitle>
-    <DialogDescription>
-      Fill out the details below to apply for a loan and set your preferred due date.  
-      You must agree to the loan Terms and Conditions before submitting.
-    </DialogDescription>
-  </DialogHeader>
+            <DialogContent className="max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Request a Loan</DialogTitle>
+                <DialogDescription>
+                  Select your loan type and fill out the details below to apply.
+                </DialogDescription>
+              </DialogHeader>
 
-  {/* Scrollable body */}
-  <div className="space-y-4 mt-4 pb-6">
-    <div>
-      <Label>Principal Amount ($)</Label>
-      <Input
-        type="number"
-        value={loanForm.principal_amount}
-        onChange={(e) => handleInputChange('principal_amount', e.target.value)}
-      />
-    </div>
+              {/* Scrollable body */}
+              <div className="space-y-4 mt-4 pb-6">
+                
+                {/* 1. Loan Type Selection Grid (NEW STRUCTURE) */}
+                <div>
+                  <Label className="mb-2 block">Select Loan Type</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.values(LOAN_CONFIG).map((loan) => {
+                      const Icon = loan.icon;
+                      const isSelected = loanForm.loan_type === loan.key;
+                      return (
+                        <div
+                          key={loan.key}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-4 border rounded-lg cursor-pointer transition-all",
+                            "hover:bg-accent hover:text-accent-foreground",
+                            isSelected 
+                              ? "bg-primary text-primary-foreground border-primary shadow-lg scale-[1.02]"
+                              : "border-gray-200 dark:border-gray-700 bg-muted/20"
+                          )}
+                          onClick={() => handleLoanTypeChange(loan.key)}
+                        >
+                          <Icon className="h-6 w-6 mb-2" />
+                          <span className="font-semibold text-sm text-center">{loan.label}</span>
+                          <span className="text-xs opacity-70 mt-1">
+                            {loan.interestRate}% APR
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* 2. Dynamic Interest Rate Display (Retained) */}
+                <div className="flex justify-between items-center p-3 border rounded-md bg-secondary/20">
+                    <Label>Applicable Interest Rate (APR)</Label>
+                    <Badge className="text-base font-semibold py-1">
+                        {currentInterestRate}%
+                    </Badge>
+                </div>
 
-    <div>
-      <Label>Interest Rate (%)</Label>
-      <Input
-        type="number"
-        value={loanForm.interest_rate}
-        onChange={(e) => handleInputChange('interest_rate', e.target.value)}
-      />
-    </div>
+                <div>
+                  <Label>Principal Amount ($)</Label>
+                  <Input
+                    type="number"
+                    value={loanForm.principal_amount}
+                    onChange={(e) => handleInputChange('principal_amount', e.target.value)}
+                  />
+                </div>
 
-    <div>
-      <Label>Loan Term (Days)</Label>
-      <Input
-        type="number"
-        value={loanForm.loan_term_days}
-        onChange={(e) => handleInputChange('loan_term_days', e.target.value)}
-      />
-    </div>
+                <div>
+                  <Label>Loan Term (Days)</Label>
+                  <Input
+                    type="number"
+                    value={loanForm.loan_term_days}
+                    onChange={(e) => handleInputChange('loan_term_days', e.target.value)}
+                  />
+                </div>
 
-    <div>
-      <Label>Repayment Schedule</Label>
-      <Input
-        value={loanForm.repayment_schedule}
-        onChange={(e) => handleInputChange('repayment_schedule', e.target.value)}
-        placeholder="e.g. daily, weekly"
-      />
-    </div>
+                <div>
+                  <Label>Repayment Schedule</Label>
+                  <Input
+                    value={loanForm.repayment_schedule}
+                    onChange={(e) => handleInputChange('repayment_schedule', e.target.value)}
+                    placeholder="e.g. daily, weekly"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Due Date</Label>
+                  <Input
+                    type="date"
+                    value={loanForm.due_date}
+                    onChange={(e) => handleInputChange('due_date', e.target.value)}
+                  />
+                </div>
 
-    <div>
-      <Label>Loan Type</Label>
-      <Input
-        value={loanForm.loan_type}
-        onChange={(e) => handleInputChange('loan_type', e.target.value)}
-      />
-    </div>
+                {/* 3. Terms & Conditions Checkbox and View Button (Retained) */}
+                <div className="flex flex-col gap-2 pt-3 border-t">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="accept-terms"
+                      checked={loanForm.acceptedTerms}
+                      onCheckedChange={(checked) => handleInputChange('acceptedTerms', checked)}
+                    />
+                    <Label htmlFor="accept-terms">
+                      I have read and accept the Terms and Conditions
+                    </Label>
+                  </div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="w-fit p-0 text-left"
+                    onClick={() => setIsTermsDialogOpen(true)}
+                  >
+                    <FileText className="h-4 w-4 mr-1" /> View Terms and Conditions
+                  </Button>
+                </div>
+              </div>
 
-    <div>
-      <Label>Due Date</Label>
-      <Input
-        type="date"
-        value={loanForm.due_date}
-        onChange={(e) => handleInputChange('due_date', e.target.value)}
-      />
-    </div>
-
-    <div className="flex items-center gap-2 mt-3">
-      <Checkbox
-        checked={loanForm.acceptedTerms}
-        onCheckedChange={(checked) => handleInputChange('acceptedTerms', checked)}
-      />
-      <Label>I accept the Terms and Conditions of this loan</Label>
-    </div>
-  </div>
-
-  <DialogFooter className="border-t pt-4 sticky bottom-0 bg-background">
-    <Button onClick={submitLoanRequest} disabled={isSubmitting} className="w-full">
-      {isSubmitting ? 'Submitting...' : 'Submit Request'}
-    </Button>
-  </DialogFooter>
-</DialogContent>
-            
-            </Dialog>
+              <DialogFooter className="border-t pt-4 sticky bottom-0 bg-background">
+                <Button onClick={submitLoanRequest} disabled={isSubmitting || !loanForm.acceptedTerms} className="w-full">
+                  {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+            {/* Render the T&C dialog */}
+            <TermsAndConditionsDialog loanType={loanForm.loan_type} /> 
+          </Dialog>
         </CardHeader>
 
         <CardContent>
+          {/* Loan progress display (unchanged) */}
           {loans.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No loans found</p>
           ) : (
@@ -279,7 +402,7 @@ export const Loans = () => {
         </CardContent>
       </Card>
 
-      {/* Loan History */}
+      {/* Loan History (unchanged) */}
       <Card>
         <CardHeader>
           <CardTitle>Loan History</CardTitle>
@@ -288,39 +411,39 @@ export const Loans = () => {
           {loans.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No loans found</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Principal</TableHead>
-                  <TableHead>Interest Rate</TableHead>
-                  <TableHead>Term</TableHead>
-                  <TableHead>Schedule</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loans.map((loan) => (
-                  <TableRow key={loan.id}>
-                    <TableCell>{loan.loan_type}</TableCell>
-                    <TableCell>${loan.principal_amount.toLocaleString()}</TableCell>
-                    <TableCell>{loan.interest_rate}%</TableCell>
-                    <TableCell>{loan.loan_term_months} months</TableCell>
-                    <TableCell>{loan.repayment_schedule}</TableCell>
-                    <TableCell>{getStatusBadge(loan.status)}</TableCell>
-                    <TableCell>
-                      {new Date(loan.created_at).toLocaleDateString()}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Principal</TableHead>
+                    <TableHead>Interest Rate</TableHead>
+                    <TableHead>Term (Days)</TableHead>
+                    <TableHead>Schedule</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {loans.map((loan) => (
+                    <TableRow key={loan.id}>
+                      <TableCell>{loan.loan_type}</TableCell>
+                      <TableCell>${loan.principal_amount.toLocaleString()}</TableCell>
+                      <TableCell>{loan.interest_rate}%</TableCell>
+                      <TableCell>{loan.loan_term_days} days</TableCell>
+                      <TableCell>{loan.repayment_schedule}</TableCell>
+                      <TableCell>{getStatusBadge(loan.status)}</TableCell>
+                      <TableCell>
+                        {new Date(loan.created_at).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
-      
     </div>
   );
 };
-
