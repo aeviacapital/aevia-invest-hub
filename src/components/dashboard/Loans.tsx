@@ -44,14 +44,14 @@ const LOAN_CONFIG = {
     key: 'PERSONAL',
     label: 'Personal Loan',
     icon: User,
-    interestRate: 5.5, // 5.5% annual interest example
+    interestRate: 3.0, // 3.0% annual interest example
     termsUrl: '/documents/personal_loan_terms.pdf', // Placeholder URL
   },
   BUSINESS: {
     key: 'BUSINESS',
     label: 'Business Loan',
     icon: Briefcase,
-    interestRate: 8.0, // 8.0% annual interest example
+    interestRate: 5.0, // 5.0% annual interest example
     termsUrl: '/documents/business_loan_terms.pdf', // Placeholder URL
   },
 };
