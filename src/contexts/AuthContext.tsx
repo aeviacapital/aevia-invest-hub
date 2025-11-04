@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
@@ -61,7 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -78,9 +76,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  //  Notify admin email via Resend
+const notifyAdmin = async (userEmail: string) => {
+  try {
+    const {data} = await supabase.auth.getSession(); 
+    const token = data?.session?.access_token; 
+    const res = await fetch(
+      "https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-login-alert",
+      {
+        method: "POST", headers: { 
+          "Content-Type": "application/json", 
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ email: userEmail }),
+      }
+    );
+
+    if (!res.ok) {
+      const data = await res.json();
+      console.error("Error sending email:", data);
+    } else {
+      console.log("Login alert sent successfully");
+    }
+  } catch (err) {
+    console.error("Error notifying admin:", err);
+  }
+};
+  
+  
   const signUp = async (email: string, password: string, fullName: string, invitationCode: string, referralCode?: string) => {
     try {
-      // Verify invitation code
       const { data: codeData, error: codeError } = await supabase
         .from('invitation_codes')
         .select('*')
@@ -92,18 +117,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: { message: 'Invalid or expired invitation code' } };
       }
 
-      // Verify referral code if provided
       let referrerId = null;
       if (referralCode) {
-        const { data: referrerData, error: referrerError } = await supabase
+        const { data: referrerData } = await supabase
           .from('profiles')
           .select('user_id')
           .eq('referral_code', referralCode)
           .single();
 
-        if (!referrerError && referrerData) {
-          referrerId = referrerData.user_id;
-        }
+        if (referrerData) referrerId = referrerData.user_id;
       }
 
       const redirectUrl = `${window.location.origin}/`;
@@ -113,21 +135,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-            invitation_code: invitationCode
-          }
-        }
+          data: { full_name: fullName, invitation_code: invitationCode },
+        },
       });
 
       if (!error && data.user) {
-        // Mark invitation code as used
         await supabase
           .from('invitation_codes')
           .update({ is_used: true, used_at: new Date().toISOString() })
           .eq('id', codeData.id);
 
-        // If there's a referrer, create referral record and update profile
         if (referrerId) {
           await supabase
             .from('profiles')
@@ -136,10 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           await supabase
             .from('referrals')
-            .insert({
-              referrer_id: referrerId,
-              referred_id: data.user.id,
-            });
+            .insert({ referrer_id: referrerId, referred_id: data.user.id });
         }
 
         toast({
@@ -154,6 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // ✅ Sign In + notify admin
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -166,6 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: 'Welcome back!',
           description: 'You have successfully signed in.',
         });
+
+        // Notify admin asynchronously
+        notifyAdmin(email);
       }
 
       return { error };
@@ -194,8 +212,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     isLoading,
     profile,
-    refreshProfile
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+

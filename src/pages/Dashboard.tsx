@@ -22,7 +22,7 @@ import { Loans } from '@/components/dashboard/Loans';
 import Referrals from '@/components/dashboard/Referrals';
 
 const Dashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [stats, setStats] = useState({
     balance: 0,
     totalInvestments: 0,
@@ -41,6 +41,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
+      refreshProfile();
       if (!user) return;
       setLoading(true);
 
@@ -92,8 +93,8 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-
     fetchDashboardStats();
+    refreshProfile(); 
   }, [user]);
 
   return (
