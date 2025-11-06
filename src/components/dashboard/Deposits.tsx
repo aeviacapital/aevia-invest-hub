@@ -49,50 +49,94 @@ const Deposits = () => {
       ...prev,
       [field]: value
     }));
-  };
+ };
 
-  const handleDeposit = async () => {
-    if (!user || depositForm.amount <= 0) return;
+const handleDeposit = async () => {
+  if (!user || depositForm.amount <= 0) return;
 
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const { error } = await supabase
-        .from('deposits')
-        .insert({
-          user_id: user.id,
-          currency: depositForm.currency,
-          amount: depositForm.amount,
-          wallet_address: walletAddresses[depositForm.currency as keyof typeof walletAddresses],
-          transaction_hash: depositForm.transactionHash || null,
-          status: 'pending'
-        });
+  try {
+    // 1️⃣ Insert deposit record into Supabase
+    const { data, error } = await supabase
+      .from("deposits")
+      .insert({
+        user_id: user.id,
+        currency: depositForm.currency,
+        amount: depositForm.amount,
+        wallet_address:
+          walletAddresses[depositForm.currency as keyof typeof walletAddresses],
+        transaction_hash: depositForm.transactionHash || null,
+        status: "pending",
+      })
+      .select()
+      .single();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      toast({
-        title: 'Deposit Submitted',
-        description: `Your ${depositForm.currency} deposit of ${depositForm.amount} has been submitted for processing.`,
-      });
+    // Build the payload (ONLY plain serializable values)
+    const payload = {
+      type: "deposit",
+      email: user.email,
+      name: (user.user_metadata && user.user_metadata.full_name) || user.email,
+      amount: Number(depositForm.amount),
+      user_id: user.id,
+      sent_by: "system", 
+      action_link: "/dashboard",
+    };
 
-      fetchDeposits();
-      setDepositForm({
-        currency: 'BTC',
-        amount: 0,
-        transactionHash: ''
-      });
+    // Log payload (open browser console and inspect)
+    console.log("send-notification payload:", payload);
 
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive'
-      });
+    // 2️⃣ Call Edge Function
+    const res = await fetch(
+      "https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-notification",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    // Dump response for debug
+    const text = await res.text();
+    console.log("send-notification response status:", res.status);
+    console.log("send-notification response body:", text);
+
+    if (!res.ok) {
+      // show a helpful error to user and also to console
+      throw new Error(`Notification function failed (${res.status}): ${text}`);
     }
 
-    setIsLoading(false);
-  };
+    // 3️⃣ Show success toast
+    toast({
+      title: "Deposit Submitted",
+      description: `Your ${depositForm.currency} deposit of ${depositForm.amount} has been submitted for processing.`,
+    });
 
+    // 4️⃣ Refresh deposits + reset form
+    fetchDeposits();
+    setDepositForm({
+      currency: "BTC",
+      amount: 0,
+      transactionHash: "",
+    });
+  } catch (error: any) {
+    console.error("handleDeposit error:", error);
+    toast({
+      title: "Error",
+      description: error?.message || "Something went wrong",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+ 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({

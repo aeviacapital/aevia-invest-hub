@@ -106,82 +106,91 @@ export const Loans = () => {
       acceptedTerms: false, 
     }));
   };
+const submitLoanRequest = async () => {
+  if (!user) return;
 
-  const submitLoanRequest = async () => {
-    if (!user) return;
+  // 🔒 Validation Check
+  if (
+    !loanForm.principal_amount ||
+    !loanForm.loan_term_days ||
+    !loanForm.due_date ||
+    !loanForm.loan_type
+  ) {
+    toast.error("Please fill in all required fields.");
+    return;
+  }
 
-    // 🔒 Validation Check for required fields
-    if (!loanForm.principal_amount || !loanForm.loan_term_days || !loanForm.due_date || !loanForm.loan_type) {
-        toast.error('Please fill in all required fields.');
-        return;
-    }
+  if (!loanForm.acceptedTerms) {
+    toast.error("You must accept the Terms and Conditions.");
+    return;
+  }
 
-    if (!loanForm.acceptedTerms) {
-      toast.error('You must accept the Terms and Conditions.');
-      return;
-    }
+  setIsSubmitting(true);
 
-    setIsSubmitting(true);
+  try {
+    // 1️⃣ Insert loan request
+    const { data, error } = await supabase
+      .from("loans")
+      .insert([
+        {
+          user_id: user.id,
+          principal_amount: parseFloat(loanForm.principal_amount),
+          interest_rate: currentInterestRate,
+          loan_term_days: parseInt(loanForm.loan_term_days),
+          repayment_schedule: loanForm.repayment_schedule,
+          loan_type: loanForm.loan_type,
+          due_date: new Date(loanForm.due_date).toISOString(),
+          status: "pending",
+        },
+      ])
+      .select()
+      .single();
 
-    const { error } = await supabase.from('loans').insert([
+    if (error) throw error;
+
+    // 2️⃣ Send email + in-app notification through Edge Function
+    await fetch(
+      "https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-notification",
       {
-        user_id: user.id,
-        principal_amount: parseFloat(loanForm.principal_amount),
-        // 🔑 Use the dynamically determined interest rate
-        interest_rate: currentInterestRate, 
-        loan_term_days: parseInt(loanForm.loan_term_days),
-        repayment_schedule: loanForm.repayment_schedule,
-        loan_type: loanForm.loan_type,
-        due_date: new Date(loanForm.due_date).toISOString(),
-        status: 'pending',
-      },
-    ]);
-
-    setIsSubmitting(false);
-    setIsDialogOpen(false);
-
-    if (error) {
-      console.error('Submission error:', error);
-      toast.error('Failed to submit loan request');
-      return;
-    }
-
-    toast.success('Loan request submitted successfully');
-
-    // 🔔 Admin Notification Logic (unchanged)
-    const { data: admins } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin'); 
-
-    if (admins && admins.length > 0) {
-      for (const admin of admins) {
-        await supabase.from('notifications').insert([
-          {
-            user_id: admin.id,
-            title: 'New Loan Request',
-            message: `${user.email || 'A user'} has requested a ${loanForm.loan_type} loan.`,
-            type: 'loan_request',
-            sent_by: user.id,
-          },
-        ]);
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "loan_pending",                // ✅ new type
+          email: user.email,
+          name: user.user_metadata?.full_name || user.email,
+          amount: loanForm.principal_amount,
+          user_id: user.id,
+        }),
       }
-    }
+    );
 
-    // Reset Form
+    // 3️⃣ Toast Success
+    toast.success("Loan request submitted successfully");
+
+    // 4️⃣ Reset form
     setLoanForm({
-      principal_amount: '',
-      loan_term_days: '',
-      repayment_schedule: '',
-      loan_type: 'PERSONAL',
-      due_date: '',
+      principal_amount: "",
+      loan_term_days: "",
+      repayment_schedule: "",
+      loan_type: "PERSONAL",
+      due_date: "",
       acceptedTerms: false,
     });
 
     fetchLoans();
-  };
+    setIsDialogOpen(false);
+  } catch (err: any) {
+    console.error("Submission error:", err);
+    toast.error("Failed to submit loan request");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+  
 
-  const getStatusBadge = (status: string) => {
+    const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       pending: "secondary",
       approved: "default",

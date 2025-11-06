@@ -47,7 +47,6 @@ const Investments = () => {
 
     setUserInvestments(data || []);
   };
-
 const handleInvest = async (planId: string, amount: number) => {
   if (!user || !amount || amount <= 0) return;
 
@@ -55,22 +54,24 @@ const handleInvest = async (planId: string, amount: number) => {
 
   try {
     const plan = investmentPlans.find(p => p.id === planId);
-    if (!plan) throw new Error('Investment plan not found');
+    if (!plan) throw new Error("Investment plan not found");
 
-    // Validate investment amount
+    // ✅ Validate investment amount
     if (amount < parseFloat(plan.min_deposit.toString())) {
-      throw new Error(`Minimum deposit is $${parseFloat(plan.min_deposit.toString()).toLocaleString()}`);
+      throw new Error(
+        `Minimum deposit is $${parseFloat(plan.min_deposit.toString()).toLocaleString()}`
+      );
     }
 
     // ✅ Check user's balance
-    const { data: profileData } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', user.id)
+    const { data: wallet } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
       .single();
 
-    if (!profileData || parseFloat(profileData.balance.toString()) < amount) {
-      throw new Error('Insufficient balance. Please deposit funds first.');
+    if (!wallet || parseFloat(wallet.balance.toString()) < amount) {
+      throw new Error("Insufficient balance. Please deposit funds first.");
     }
 
     // ✅ Calculate end date based on duration_days
@@ -80,92 +81,104 @@ const handleInvest = async (planId: string, amount: number) => {
 
     // ✅ Check if first investment (for referral logic)
     const { data: existingInvestments } = await supabase
-      .from('user_investments')
-      .select('id')
-      .eq('user_id', user.id);
+      .from("user_investments")
+      .select("id")
+      .eq("user_id", user.id);
 
     const isFirstInvestment = !existingInvestments || existingInvestments.length === 0;
 
     // ✅ Create new investment record
-    const { error: investError } = await supabase
-      .from('user_investments')
-      .insert({
-        user_id: user.id,
-        plan_id: planId,
-        amount,
-        status: 'active',
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString()
-      });
+    const { error: investError } = await supabase.from("user_investments").insert({
+      user_id: user.id,
+      plan_id: planId,
+      amount,
+      status: "active",
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+    });
 
     if (investError) throw investError;
 
     // ✅ Deduct from user's balance
-    const newBalance = parseFloat(profileData.balance.toString()) - amount;
+    const newBalance = parseFloat(wallet.balance.toString()) - amount;
     const { error: balanceError } = await supabase
-      .from('wallets')
+      .from("wallets")
       .update({ balance: newBalance })
-      .eq('user_id', user.id);
+      .eq("user_id", user.id);
 
     if (balanceError) throw balanceError;
 
     // ✅ Handle referral bonus if first investment
     if (isFirstInvestment) {
-      const { data: profileWithReferrer } = await supabase
-        .from('wallets')
-        .select('referred_by')
-        .eq('user_id', user.id)
+      const { data: referralData } = await supabase
+        .from("wallets")
+        .select("referred_by")
+        .eq("user_id", user.id)
         .single();
 
-      if (profileWithReferrer?.referred_by) {
-        const bonusAmount = amount * 0.10;
+      if (referralData?.referred_by) {
+        const bonusAmount = amount * 0.1;
 
         // Update referral record
         await supabase
-          .from('referrals')
+          .from("referrals")
           .update({
             bonus_earned: bonusAmount,
-            first_investment_made: true
+            first_investment_made: true,
           })
-          .eq('referred_id', user.id);
+          .eq("referred_id", user.id);
 
         // Credit referrer’s balance
-        const { data: referrerProfile } = await supabase
-          .from('wallets')
-          .select('balance')
-          .eq('user_id', profileWithReferrer.referred_by)
+        const { data: referrer } = await supabase
+          .from("wallets")
+          .select("balance")
+          .eq("user_id", referralData.referred_by)
           .single();
 
-        if (referrerProfile) {
+        if (referrer) {
           await supabase
-            .from('wallets')
+            .from("wallets")
             .update({
-              balance: parseFloat(referrerProfile.balance.toString()) + bonusAmount
+              balance: parseFloat(referrer.balance.toString()) + bonusAmount,
             })
-            .eq('user_id', profileWithReferrer.referred_by);
+            .eq("user_id", referralData.referred_by);
         }
       }
     }
 
+    // ✅ Send Email + In-App Notification via Edge Function
+    await fetch("https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-notification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "investment", // must match one of your Edge Function cases
+        email: user.email,
+        name: user.user_metadata?.full_name || user.email,
+        user_id: user.id,
+        amount,
+      }),
+    });
+
     toast({
-      title: 'Investment Successful',
+      title: "Investment Successful",
       description: `Successfully invested $${amount.toLocaleString()} in ${plan.title}.`,
     });
 
     fetchUserInvestments();
     setInvestmentAmounts(prev => ({ ...prev, [planId]: 0 }));
-
   } catch (error: any) {
+    console.error("Investment error:", error);
     toast({
-      title: 'Error',
+      title: "Error",
       description: error.message,
-      variant: 'destructive'
+      variant: "destructive",
     });
   } finally {
     setIsLoading(false);
   }
 };
-  
+
+ 
   const calculateProgress = (startDate: string, endDate: string) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
