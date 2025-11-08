@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, UserPlus, ArrowLeft, Shield } from 'lucide-react';
+import { LogIn, UserPlus, ArrowLeft, Shield, RefreshCcw } from 'lucide-react';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+  const [passwordCache, setPasswordCache] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,53 +22,77 @@ const Auth = () => {
     referralCode: ''
   });
 
-  const { signIn, signUp, user } = useAuth();
+  const [timer, setTimer] = useState(180); // 3 minutes in seconds
+  const [canResend, setCanResend] = useState(false);
+
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
-  const EDGE_FUNCTION_URL = 'https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-otp'; 
-  
-  // Proposed Change
-useEffect(() => {
-  // Only navigate if the user is present AND we are NOT in the OTP step
-  // This prevents the redirect from cancelling the 2FA flow.
-  if (user && !otpStep) { 
-    navigate(from, { replace: true });
-  }
-  const params = new URLSearchParams(location.search);
-  const refCode = params.get('ref');
-  if (refCode) setFormData(prev => ({ ...prev, referralCode: refCode }));
-}, [user, navigate, from, location, otpStep]); // Add otpStep to dependency array
+  // 🔗 Your endpoints
+  const EDGE_FUNCTION_SEND_OTP = 'https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-otp';
+  const EDGE_FUNCTION_RESEND_OTP ='https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/resend-otp' ;
 
-   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (user && !otpStep) navigate(from, { replace: true });
+
+    const params = new URLSearchParams(location.search);
+    const refCode = params.get('ref');
+    if (refCode) setFormData(prev => ({ ...prev, referralCode: refCode }));
+  }, [user, navigate, from, location, otpStep]);
+
+  // 🕒 Timer countdown effect
+  useEffect(() => {
+    let countdown: any;
+    if (otpStep && !canResend) {
+      countdown = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(countdown);
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(countdown);
+  }, [otpStep, canResend]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ---------------- SIGN IN + SEND OTP ----------------
-  const handleSignIn = async (e: React.FormEvent) => {
+  // ---------------- SIGN UP ----------------
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    const { error } = await signIn(formData.email, formData.password);
-    if (error) {
-      console.error('Sign in error:', error);
-      setError('Invalid credentials.');
-      setIsLoading(false);
-      return;
-    }
-
-    // Trigger 2FA OTP
     try {
-      const res = await fetch(EDGE_FUNCTION_URL, {
+      const res = await fetch(EDGE_FUNCTION_SEND_OTP, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, action: 'send_otp' })
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        })
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+      if (!res.ok) throw new Error(data.error || 'Signup failed');
+
+      setPasswordCache(formData.password);
       setOtpStep(true);
+      setTimer(180);
+      setCanResend(false);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -82,14 +107,47 @@ useEffect(() => {
     setError('');
 
     try {
-      const res = await fetch(EDGE_FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, otp, action: 'verify_otp' })
+      const res = await fetch("http://localhost:3000/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          otp,
+          email: formData.email,
+        }),
       });
+
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || 'Invalid or expired OTP');
-      navigate('/dashboard');
+      if (!res.ok || !data.success) throw new Error(data.error || data.message || "Invalid or expired OTP");
+
+      // ✅ Auto-login after OTP verification
+      const { error } = await signIn(formData.email, passwordCache);
+      if (error) throw new Error("Account verified, but auto-login failed.");
+
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ♻️ RESEND OTP
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(EDGE_FUNCTION_RESEND_OTP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to resend OTP");
+
+      setTimer(180);
+      setCanResend(false);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -97,18 +155,14 @@ useEffect(() => {
     }
   };
 
-  // ---------------- SIGN UP ----------------
-  const handleSignUp = async (e: React.FormEvent) => {
+  // ---------------- SIGN IN ----------------
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signUp(
-      formData.email,
-      formData.password,
-      formData.fullName,
-      formData.invitationCode,
-      formData.referralCode
-    );
-    if (error) console.error('Sign up error:', error);
+    setError('');
+
+    const { error } = await signIn(formData.email, formData.password);
+    if (error) setError('Invalid email or password.');
     setIsLoading(false);
   };
 
@@ -148,28 +202,14 @@ useEffect(() => {
                 <TabsContent value="signin">
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <Input
-                        id="signin-email"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label>Email</Label>
+                      <Input name="email" type="email" placeholder="Enter your email"
+                        value={formData.email} onChange={handleInputChange} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
-                      <Input
-                        id="signin-password"
-                        name="password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label>Password</Label>
+                      <Input name="password" type="password" placeholder="Enter your password"
+                        value={formData.password} onChange={handleInputChange} required />
                     </div>
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <Button type="submit" className="w-full btn-hero" disabled={isLoading}>
@@ -182,30 +222,31 @@ useEffect(() => {
                 <TabsContent value="signup">
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signup-name">Full Name</Label>
-                      <Input id="signup-name" name="fullName" type="text" placeholder="Enter your full name"
+                      <Label>Full Name</Label>
+                      <Input name="fullName" type="text" placeholder="Enter your full name"
                         value={formData.fullName} onChange={handleInputChange} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input id="signup-email" name="email" type="email" placeholder="Enter your email"
+                      <Label>Email</Label>
+                      <Input name="email" type="email" placeholder="Enter your email"
                         value={formData.email} onChange={handleInputChange} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input id="signup-password" name="password" type="password" placeholder="Create a password"
+                      <Label>Password</Label>
+                      <Input name="password" type="password" placeholder="Create a password"
                         value={formData.password} onChange={handleInputChange} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="invitation-code">Invitation Code</Label>
-                      <Input id="invitation-code" name="invitationCode" type="text" placeholder="Enter invitation code"
+                      <Label>Invitation Code</Label>
+                      <Input name="invitationCode" type="text" placeholder="Enter invitation code"
                         value={formData.invitationCode} onChange={handleInputChange} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="referral-code">Referral Code (Optional)</Label>
-                      <Input id="referral-code" name="referralCode" type="text" placeholder="Enter referral code if you have one"
+                      <Label>Referral Code (Optional)</Label>
+                      <Input name="referralCode" type="text" placeholder="Enter referral code if you have one"
                         value={formData.referralCode} onChange={handleInputChange} />
                     </div>
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
                     <Button type="submit" className="w-full btn-hero" disabled={isLoading}>
                       {isLoading ? 'Creating account...' : (<><UserPlus className="w-4 h-4 mr-2" /> Create Account</>)}
                     </Button>
@@ -214,17 +255,15 @@ useEffect(() => {
               </Tabs>
             ) : (
               // OTP VERIFICATION
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="text-center">
-                  <Shield className="mx-auto mb-2 text-yellow-500" size={32} />
-                  <p className="text-muted-foreground text-sm">
-                    A verification code was sent to <span className="font-semibold">{formData.email}</span>.
-                  </p>
-                </div>
+              <form onSubmit={handleVerifyOtp} className="space-y-4 text-center">
+                <Shield className="mx-auto mb-2 text-yellow-500" size={32} />
+                <p className="text-muted-foreground text-sm">
+                  A verification code was sent to <span className="font-semibold">{formData.email}</span>.
+                </p>
+
                 <div className="space-y-2">
-                  <Label htmlFor="otp">Enter OTP</Label>
+                  <Label>Enter OTP</Label>
                   <Input
-                    id="otp"
                     name="otp"
                     type="text"
                     inputMode="numeric"
@@ -236,8 +275,27 @@ useEffect(() => {
                     required
                   />
                 </div>
+
+                {/* Timer or Resend */}
+                {!canResend ? (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Code expires in <span className="font-semibold text-yellow-500">{formatTime(timer)}</span>
+                  </p>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <RefreshCcw size={16} />
+                    Resend OTP
+                  </Button>
+                )}
+
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                <Button type="submit" className="w-full btn-hero" disabled={isLoading || otp.length !== 6}>
+                <Button type="submit" className="w-full btn-hero mt-2" disabled={isLoading || otp.length !== 6}>
                   {isLoading ? 'Verifying...' : 'Verify & Continue'}
                 </Button>
               </form>
@@ -252,6 +310,5 @@ useEffect(() => {
     </div>
   );
 };
-
 export default Auth;
 
