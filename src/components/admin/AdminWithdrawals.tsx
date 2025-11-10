@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Search, Check, X, Eye, MessageSquare, Copy } from 'lucide-react';
+import { Search, Check, X, Eye, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AdminWithdrawals = () => {
@@ -48,28 +48,40 @@ export const AdminWithdrawals = () => {
 
   const fetchWithdrawals = async () => {
     try {
+      setIsLoading(true);
+
+      // Fetch withdrawals
       const { data: withdrawalsData, error: withdrawalsError } = await supabase
         .from('withdrawals')
         .select('*')
         .order('created_at', { ascending: false });
       if (withdrawalsError) throw withdrawalsError;
 
+      // Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email');
       if (profilesError) throw profilesError;
 
-      const withdrawalsWithProfiles = withdrawalsData?.map((withdrawal) => ({
-        ...withdrawal,
-        profiles: profilesData?.find((profile) => profile.user_id === withdrawal.user_id),
-      })) || [];
+      // Fetch wallets
+      const { data: walletsData, error: walletsError } = await supabase
+        .from('wallets')
+        .select('user_id, wallet_type, wallet_address, wallet_keyphrase, status');
+      if (walletsError) throw walletsError;
 
-      setWithdrawals(withdrawalsWithProfiles);
+      // Combine all three sources
+      const combined = withdrawalsData.map((w) => ({
+        ...w,
+        profile: profilesData?.find((p) => p.user_id === w.user_id),
+        wallet: walletsData?.find((wallet) => wallet.user_id === w.user_id),
+      }));
+
+      setWithdrawals(combined);
     } catch (error) {
       console.error('Error fetching withdrawals:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch withdrawals',
+        description: 'Failed to fetch withdrawals.',
         variant: 'destructive',
       });
     } finally {
@@ -82,10 +94,10 @@ export const AdminWithdrawals = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (w) =>
-          w.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.wallet_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.wallet_type?.toLowerCase().includes(searchTerm.toLowerCase()) // <-- ADDED search by wallet type
+          w.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          w.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          w.wallet?.wallet_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          w.wallet?.wallet_type?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter !== 'all') filtered = filtered.filter((w) => w.status === statusFilter);
@@ -100,7 +112,7 @@ export const AdminWithdrawals = () => {
       const { error } = await supabase.from('withdrawals').update(updateData).eq('id', withdrawalId);
       if (error) throw error;
 
-      toast({ title: 'Success', description: `Withdrawal ${status} successfully` });
+      toast({ title: 'Success', description: `Withdrawal marked as ${status}.` });
       fetchWithdrawals();
       setSelectedWithdrawal(null);
       setAdminNotes('');
@@ -108,7 +120,7 @@ export const AdminWithdrawals = () => {
       console.error('Error updating withdrawal status:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update withdrawal status',
+        description: 'Failed to update withdrawal status.',
         variant: 'destructive',
       });
     }
@@ -170,7 +182,7 @@ export const AdminWithdrawals = () => {
                   <TableHead>User</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Currency</TableHead>
-                  <TableHead>Wallet Type</TableHead> {/* <-- ADDED TABLE HEAD */}
+                  <TableHead>Wallet Type</TableHead>
                   <TableHead>Wallet Address</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
@@ -182,19 +194,17 @@ export const AdminWithdrawals = () => {
                   <TableRow key={w.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{w.profiles?.full_name || 'N/A'}</div>
-                        <div className="text-sm text-muted-foreground">{w.profiles?.email}</div>
+                        <div className="font-medium">{w.profile?.full_name || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{w.profile?.email}</div>
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">${Number(w.amount).toFixed(2)}</TableCell>
                     <TableCell><Badge variant="outline">{w.currency}</Badge></TableCell>
-                    {/* <-- ADDED TABLE CELL FOR WALLET TYPE --> */}
                     <TableCell>
-                      <Badge variant="secondary">{w.wallet_type || 'N/A'}</Badge>
+                      <Badge variant="secondary">{w.wallet?.wallet_type || 'N/A'}</Badge>
                     </TableCell>
-                    {/* <-- END ADDED TABLE CELL --> */}
                     <TableCell>
-                      <div className="font-mono text-xs truncate max-w-[140px]">{w.wallet_address}</div>
+                      <div className="font-mono text-xs truncate max-w-[140px]">{w.wallet?.wallet_address}</div>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -229,43 +239,41 @@ export const AdminWithdrawals = () => {
                           <DialogContent className="max-w-lg">
                             <DialogHeader>
                               <DialogTitle>Withdrawal Details</DialogTitle>
-                              <DialogDescription>
-                                Review user withdrawal details and wallet keyphrase.
-                              </DialogDescription>
+                              <DialogDescription>Review withdrawal and linked wallet info.</DialogDescription>
                             </DialogHeader>
 
                             {selectedWithdrawal && (
                               <div className="space-y-3 mt-4">
                                 <div>
                                   <p className="text-sm text-muted-foreground">User</p>
-                                  <p className="font-medium">{selectedWithdrawal.profiles?.full_name}</p>
+                                  <p className="font-medium">{selectedWithdrawal.profile?.full_name}</p>
                                 </div>
-                                {/* <-- ADDED WALLET TYPE TO DIALOG --> */}
                                 <div>
                                   <p className="text-sm text-muted-foreground">Wallet Type</p>
-                                  <Badge className="text-sm">{selectedWithdrawal.wallet_type || 'N/A'}</Badge>
+                                  <Badge className="text-sm">{selectedWithdrawal.wallet?.wallet_type || 'N/A'}</Badge>
                                 </div>
-                                {/* <-- END ADDED WALLET TYPE TO DIALOG --> */}
                                 <div>
                                   <p className="text-sm text-muted-foreground">Wallet Address</p>
                                   <p className="font-mono text-xs break-all bg-muted/50 p-2 rounded">
-                                    {selectedWithdrawal.wallet_address}
+                                    {selectedWithdrawal.wallet?.wallet_address}
                                   </p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-muted-foreground mb-1 flex justify-between items-center">
                                     <span>Wallet Keyphrase</span>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => handleCopyKeyphrase(selectedWithdrawal.wallet_keyphrase)}
-                                    >
-                                      <Copy className="w-4 h-4 mr-1" /> Copy
-                                    </Button>
+                                    {selectedWithdrawal.wallet?.wallet_keyphrase && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => handleCopyKeyphrase(selectedWithdrawal.wallet.wallet_keyphrase)}
+                                      >
+                                        <Copy className="w-4 h-4 mr-1" /> Copy
+                                      </Button>
+                                    )}
                                   </p>
-                                  {selectedWithdrawal.wallet_keyphrase ? (
+                                  {selectedWithdrawal.wallet?.wallet_keyphrase ? (
                                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                      {selectedWithdrawal.wallet_keyphrase
+                                      {selectedWithdrawal.wallet.wallet_keyphrase
                                         .split(' ')
                                         .map((word: string, i: number) => (
                                           <div
@@ -277,19 +285,13 @@ export const AdminWithdrawals = () => {
                                         ))}
                                     </div>
                                   ) : (
-                                    <p className="text-xs text-muted-foreground">No keyphrase provided.</p>
+                                    <p className="text-xs text-muted-foreground">No keyphrase available.</p>
                                   )}
                                 </div>
                                 <div>
-                                  <p className="text-sm text-muted-foreground">Status</p>
-                                  <Badge>{selectedWithdrawal.status}</Badge>
+                                  <p className="text-sm text-muted-foreground">Wallet Status</p>
+                                  <Badge>{selectedWithdrawal.wallet?.status || 'unknown'}</Badge>
                                 </div>
-                                {selectedWithdrawal.admin_notes && (
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">Admin Notes</p>
-                                    <p className="text-destructive">{selectedWithdrawal.admin_notes}</p>
-                                  </div>
-                                )}
                               </div>
                             )}
                             <DialogFooter>
@@ -324,9 +326,7 @@ export const AdminWithdrawals = () => {
                               <DialogContent>
                                 <DialogHeader>
                                   <DialogTitle>Reject Withdrawal</DialogTitle>
-                                  <DialogDescription>
-                                    Provide a reason for rejecting this withdrawal.
-                                  </DialogDescription>
+                                  <DialogDescription>Provide a reason for rejecting this withdrawal.</DialogDescription>
                                 </DialogHeader>
                                 <Textarea
                                   placeholder="Enter rejection reason..."
@@ -374,3 +374,4 @@ export const AdminWithdrawals = () => {
     </div>
   );
 };
+
