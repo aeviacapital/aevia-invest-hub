@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, UserPlus, ArrowLeft, Shield, RefreshCcw } from 'lucide-react';
+import { LogIn, UserPlus, ArrowLeft, Shield, RefreshCcw, Mail } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +15,10 @@ const Auth = () => {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [passwordCache, setPasswordCache] = useState('');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,7 +27,7 @@ const Auth = () => {
     referralCode: ''
   });
 
-  const [timer, setTimer] = useState(180); // 3 minutes in seconds
+  const [timer, setTimer] = useState(180);
   const [canResend, setCanResend] = useState(false);
 
   const { signIn, user } = useAuth();
@@ -32,7 +37,8 @@ const Auth = () => {
 
   // 🔗 Your endpoints
   const EDGE_FUNCTION_SEND_OTP = 'https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-otp';
-  const EDGE_FUNCTION_RESEND_OTP ='https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/resend-otp' ;
+  const EDGE_FUNCTION_RESEND_OTP = 'https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/resend-otp';
+  const EDGE_FUNCTION_PASSWORD_RESET = 'https://niwhcvzhvjqrqhyayarv.supabase.co/functions/v1/send-reset-password';
 
   useEffect(() => {
     if (user && !otpStep) navigate(from, { replace: true });
@@ -42,7 +48,6 @@ const Auth = () => {
     if (refCode) setFormData(prev => ({ ...prev, referralCode: refCode }));
   }, [user, navigate, from, location, otpStep]);
 
-  // 🕒 Timer countdown effect
   useEffect(() => {
     let countdown: any;
     if (otpStep && !canResend) {
@@ -119,7 +124,6 @@ const Auth = () => {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || data.message || "Invalid or expired OTP");
 
-      // ✅ Auto-login after OTP verification
       const { error } = await signIn(formData.email, passwordCache);
       if (error) throw new Error("Account verified, but auto-login failed.");
 
@@ -164,6 +168,30 @@ const Auth = () => {
     const { error } = await signIn(formData.email, formData.password);
     if (error) setError('Invalid email or password.');
     setIsLoading(false);
+  };
+
+  // ---------------- RESET PASSWORD ----------------
+  const handleSendReset = async () => {
+    setIsLoading(true);
+    setResetMessage('');
+    setError('');
+
+    try {
+      const res = await fetch(EDGE_FUNCTION_PASSWORD_RESET, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send reset email');
+
+      setResetMessage('✅ Password reset link sent! Check your inbox.');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -211,6 +239,15 @@ const Auth = () => {
                       <Input name="password" type="password" placeholder="Enter your password"
                         value={formData.password} onChange={handleInputChange} required />
                     </div>
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => setShowResetModal(true)}
+                        className="text-xs text-blue-500 hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <Button type="submit" className="w-full btn-hero" disabled={isLoading}>
                       {isLoading ? 'Signing in...' : (<><LogIn className="w-4 h-4 mr-2" /> Sign In</>)}
@@ -219,8 +256,9 @@ const Auth = () => {
                 </TabsContent>
 
                 {/* Sign Up */}
+                {/* (unchanged) */}
                 <TabsContent value="signup">
-                  <form onSubmit={handleSignUp} className="space-y-4">
+<form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
                       <Label>Full Name</Label>
                       <Input name="fullName" type="text" placeholder="Enter your full name"
@@ -251,12 +289,13 @@ const Auth = () => {
                       {isLoading ? 'Creating account...' : (<><UserPlus className="w-4 h-4 mr-2" /> Create Account</>)}
                     </Button>
                   </form>
+                  
                 </TabsContent>
               </Tabs>
             ) : (
-              // OTP VERIFICATION
+              // OTP Verification (unchanged)
               <form onSubmit={handleVerifyOtp} className="space-y-4 text-center">
-                <Shield className="mx-auto mb-2 text-yellow-500" size={32} />
+<Shield className="mx-auto mb-2 text-yellow-500" size={32} />
                 <p className="text-muted-foreground text-sm">
                   A verification code was sent to <span className="font-semibold">{formData.email}</span>.
                 </p>
@@ -298,6 +337,7 @@ const Auth = () => {
                 <Button type="submit" className="w-full btn-hero mt-2" disabled={isLoading || otp.length !== 6}>
                   {isLoading ? 'Verifying...' : 'Verify & Continue'}
                 </Button>
+              
               </form>
             )}
           </CardContent>
@@ -307,8 +347,37 @@ const Auth = () => {
           <p>Need an invitation code? Contact your account manager.</p>
         </div>
       </div>
+
+      {/* 🔒 Password Reset Modal */}
+      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Password Reset</DialogTitle>
+            <DialogDescription>Enter your email to receive a password reset link.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+            />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {resetMessage && <p className="text-green-500 text-sm">{resetMessage}</p>}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={handleSendReset} disabled={isLoading || !resetEmail}>
+              {isLoading ? 'Sending...' : (<><Mail className="w-4 h-4 mr-2" /> Send Link</>)}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
 export default Auth;
 
