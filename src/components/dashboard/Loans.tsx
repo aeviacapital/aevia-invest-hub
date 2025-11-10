@@ -353,6 +353,7 @@ const submitLoanRequest = async () => {
                   <Input
                     type="date"
                     value={loanForm.due_date}
+                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => handleInputChange('due_date', e.target.value)}
                   />
                 </div>
