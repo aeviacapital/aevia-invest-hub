@@ -1,4 +1,5 @@
 import { Facebook, Twitter, Mail, MapPin, MessageCircle } from "lucide-react";
+import {Link} from "react-router-dom"; 
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -45,10 +46,14 @@ const Footer = () => {
             {/* Company Info */}
             <div className="lg:col-span-2">
               <div className="flex items-center space-x-2 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-xl">A</span>
-                </div>
-                <span className="text-2xl font-bold text-gradient-primary">AeviaCapital</span>
+              <Link to="/" className="flex items-center space-x-2">
+  <img 
+    src="/logo.png" 
+    alt="Aevia Capital Logo"
+    className="h-20 sm:h-22 w-auto" // Set the height and auto-scale the width
+  />
+  </Link>
+
               </div>
               
               <p className="text-muted-foreground mb-6 leading-relaxed">

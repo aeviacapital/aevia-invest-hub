@@ -1,4 +1,4 @@
-import { Users, CreditCard, Banknote, Shield, TrendingUp, Settings, Bell, BarChart3, FileText, FolderKanban, UserPlus } from 'lucide-react';
+import { Users, CreditCard, Banknote, Shield, TrendingUp, Settings, Bell, BarChart3, FileText, FolderKanban, UserPlus, Mail } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import {Link} from "react-router-dom";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -29,6 +30,7 @@ const adminItems = [
   { id: 'referrals', title: 'Referrals', icon: UserPlus },
   { id: 'notifications', title: 'Notifications', icon: Bell },
   { id: 'settings', title: 'Settings', icon: Settings },
+  {id: 'send-email', title: "Send Email", icon: Mail},
 ];
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
@@ -40,8 +42,15 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       <SidebarContent>
         <div className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">A</span>
+            <div className="w-12 h-12  flex items-center justify-center ">
+             <div className="flex items-center space-x-2">
+  <img 
+    src="/logo.png" 
+    alt="Aevia Capital Logo"
+    className="h-20 sm:h-22 w-auto" // Set the height and auto-scale the width
+  />
+  </div>
+
             </div>
             {!collapsed && (
               <span className="text-lg font-bold text-gradient-primary">Admin</span>

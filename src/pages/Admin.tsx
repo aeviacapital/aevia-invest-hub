@@ -15,6 +15,7 @@ import { AdminInvestmentPlans } from '@/components/admin/AdminInvestmentPlans';
 import { AdminTradingHistory } from '@/components/admin/AdminTradingHistory';
 import AdminReferrals from '@/components/admin/AdminReferrals';
 import { useAuth } from '@/contexts/AuthContext';
+import {AdminSendEmailDialog} from "@/components/admin/AdminSendEmailDialog"; 
 
 const Admin = () => {
   const { signOut } = useAuth();
@@ -90,6 +91,9 @@ const Admin = () => {
 
           <TabsContent value="referrals">
             <AdminReferrals />
+          </TabsContent>
+          <TabsContent value="send-email">
+            <AdminSendEmailDialog />
           </TabsContent>
         </Tabs>
             </div>
