@@ -10,16 +10,7 @@ import {
   Award,
 } from 'lucide-react';
 import DashboardNavbar from '@/components/dashboard/DashboardNavbar';
-import TradingSimulation from '@/components/dashboard/TradingSimulation';
-import CopyTrading from '@/components/dashboard/CopyTrading';
-import Investments from '@/components/dashboard/Investments';
-import Deposits from '@/components/dashboard/Deposits';
-import Withdrawals from '@/components/dashboard/Withdrawals';
-import KYCVerification from '@/components/dashboard/KYCVerification';
-import Profile from '@/components/dashboard/Profile';
-import Notifications from '@/components/dashboard/Notifications';
-import { Loans } from '@/components/dashboard/Loans';
-import Referrals from '@/components/dashboard/Referrals';
+import AccountTabs from "@/pages/AccountTabs"; 
 
 const Dashboard = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -175,63 +166,8 @@ const Dashboard = () => {
         )}
 
         {/* Main Dashboard Tabs */}
-        <Tabs  className="w-full" defaultValue="trading">
-          <div className="w-full overflow-x-auto mx-4 px-4 pb-2 ">
-            <TabsList defaultValue="trading" className="w-full flex justify-start md:justify-center bg-transparent-500">
-              <TabsTrigger value="trading">Trading</TabsTrigger>
-              <TabsTrigger value="copy-trading">Copy Trading</TabsTrigger>
-              <TabsTrigger value="investments">Investments</TabsTrigger>
-              <TabsTrigger value="deposits">Deposits</TabsTrigger>
-              <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
-              <TabsTrigger value="loans">Loans</TabsTrigger>
-              <TabsTrigger value="referrals">Referrals</TabsTrigger>
-              <TabsTrigger value="kyc">KYC</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="trading" className="mt-6">
-            <TradingSimulation />
-          </TabsContent>
-
-          <TabsContent value="copy-trading" className="mt-6">
-            <CopyTrading />
-          </TabsContent>
-
-          <TabsContent value="investments" className="mt-6">
-            <Investments />
-          </TabsContent>
-
-          <TabsContent value="deposits" className="mt-6">
-            <Deposits />
-          </TabsContent>
-
-          <TabsContent value="withdrawals" className="mt-6">
-            <Withdrawals />
-          </TabsContent>
-
-          <TabsContent value="loans" className="mt-6">
-            <Loans />
-          </TabsContent>
-
-          <TabsContent value="referrals" className="mt-6">
-            <Referrals />
-          </TabsContent>
-
-          <TabsContent value="kyc" className="mt-6">
-            <KYCVerification />
-          </TabsContent>
-
-          <TabsContent value="notifications" className="mt-6">
-            <Notifications />
-          </TabsContent>
-
-          <TabsContent value="profile" className="mt-6">
-            <Profile />
-          </TabsContent>
-        </Tabs>
-      </div>
+          <AccountTabs />
+       </div>
     </div>
   );
 };

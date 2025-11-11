@@ -88,6 +88,7 @@ const Auth = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
+          invitationCode:formData.invitationCode
         })
       });
 

@@ -744,7 +744,7 @@ const callCloseTradeRpc = async (tradeId: string, exitPrice: number) => {
         <Card className="lg:col-span-2 card-glass">
           <CardHeader>
             <CardTitle>Live Chart</CardTitle>
-            <CardDescription>Price feed from public tickers</CardDescription>
+            <CardDescription>Price feed</CardDescription>
           </CardHeader>
           <CardContent>
             <div id="tradingview_chart" className="h-[500px]" />

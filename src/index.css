@@ -149,3 +149,11 @@
   0% { box-shadow: 0 0 20px hsl(45 100% 65% / 0.3); }
   100% { box-shadow: 0 0 40px hsl(45 100% 65% / 0.6); }
 }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
