@@ -6,28 +6,23 @@ const Footer = () => {
 
   const footerLinks = {
     platform: [
-      { name: "Crypto Currency Trading", href: "#" },
-      { name: "Copy Trading", href: "#" },
-      { name: "Investment Plans", href: "#" },
-      { name: "Portfolio Analytics", href: "#" }
+      { name: "Crypto Currency Trading", href: "/auth" },
+      { name: "Copy Trading", href: "/auth" },
+      { name: "Investment Plans", href: "/auth" },
+      { name: "Portfolio Analytics", href: "/auth" }
     ],
     company: [
-      { name: "About Us", href: "#about" },
-      { name: "Our Team", href: "#" },
-      { name: "Careers", href: "#" },
-      { name: "Press Kit", href: "#" }
+      { name: "About Us", href: "/aboutus" },
+      { name: "Our Team", href: "/OurTeam" },
     ],
     support: [
-      { name: "Help Center", href: "#" },
-      { name: "Contact Support", href: "#contact" },
-      { name: "System Status", href: "#" },
-      { name: "API Documentation", href: "#" }
+      { name: "Help Center", href: "/helpcenter" },
+      { name: "Contact Support", href: "/contactus" },
     ],
     legal: [
-      { name: "Privacy Policy", href: "#" },
-      { name: "Terms of Service", href: "#" },
-      { name: "Risk Disclosure", href: "#" },
-      { name: "Compliance", href: "#" }
+      { name: "Privacy Policy", href: "/privacypolicy" },
+      { name: "Terms of Service", href: "/termsofservice" },
+      { name: "Refund Policy", href: "/refundpolicy" },
     ]
   };
 

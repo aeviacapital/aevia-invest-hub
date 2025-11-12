@@ -1,0 +1,285 @@
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  CreditCard,
+  RefreshCw,
+  Mail,
+  Timer,
+  ClipboardList,
+  ShieldCheck,
+  FileText,
+  CalendarClock,
+  XCircle,
+  Building2,
+} from "lucide-react";
+import Footer from "@/components/Footer"; 
+import Navbar from "@/components/Navbar"; 
+
+export default function RefundPolicy() {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <Navbar />
+      <motion.header
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center mb-16"
+      >
+        <RefreshCw className="w-16 h-16 mx-auto text-primary animate-float" />
+        <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-2">
+          Aevia Capital Refund Policy
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Effective Date: November 12, 2025
+        </p>
+      </motion.header>
+
+      {/* Main Content */}
+      <div className="space-y-12 max-w-4xl mx-auto">
+        {/* Section 1: Introduction */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-fade-in"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <FileText className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">Overview</h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            At <strong>Aevia Capital</strong>, we are committed to maintaining
+            transparency and ensuring customer satisfaction across all our
+            investment and financial services. This Refund Policy outlines the
+            conditions under which refunds are granted and the process for
+            requesting one.
+          </p>
+        </motion.section>
+
+        {/* Section 2: Eligibility */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-slide-up"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <ShieldCheck className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">1. Eligibility for Refunds</h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            Refunds may be considered under the following circumstances:
+          </p>
+
+          <ul className="list-disc list-inside text-muted-foreground space-y-2">
+            <li>
+              <strong>Service Not Delivered:</strong> If Aevia Capital fails to
+              provide the agreed service or product within the specified
+              timeframe.
+            </li>
+            <li>
+              <strong>Duplicate or Unauthorized Transactions:</strong> If a
+              transaction occurs without authorization or is processed more than
+              once in error.
+            </li>
+            <li>
+              <strong>Processing Error:</strong> If a technical or
+              administrative issue leads to an incorrect payment or failed
+              transaction.
+            </li>
+          </ul>
+
+          <div className="mt-6">
+            <p className="text-muted-foreground font-semibold">
+              Refunds are <span className="text-destructive">not</span> available for:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 mt-2">
+              <li>
+                Completed investment returns, trading results, or realized gains
+                or losses.
+              </li>
+              <li>
+                Services already rendered, including account setup or
+                consultation.
+              </li>
+              <li>
+                Canceled contracts or subscriptions after the agreed service
+                period has begun.
+              </li>
+            </ul>
+          </div>
+        </motion.section>
+
+        {/* Section 3: Refund Process */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-fade-in"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <ClipboardList className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">2. Refund Request Process</h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            To initiate a refund request, please follow the steps below:
+          </p>
+
+          <ol className="list-decimal list-inside text-muted-foreground space-y-2">
+            <li>
+              Email our support team at{" "}
+              <a
+                href="mailto:support@aeviacapital.com"
+                className="text-primary hover:underline"
+              >
+                support@aeviacapital.com
+              </a>{" "}
+              with the subject line <em>“Refund Request.”</em>
+            </li>
+            <li>Include the following details in your message:</li>
+          </ol>
+
+          <ul className="list-disc list-inside text-muted-foreground ml-4 space-y-2">
+            <li>Full name and registered account email</li>
+            <li>Transaction ID or payment proof</li>
+            <li>Date and amount of the transaction</li>
+            <li>Reason for the refund request</li>
+          </ul>
+
+          <p className="text-muted-foreground">
+            Our team will review your request and respond within{" "}
+            <strong>7 business days</strong>.
+          </p>
+        </motion.section>
+
+        {/* Section 4: Approval & Timeline */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-slide-up"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <Timer className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">
+              3. Refund Approval and Timeline
+            </h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            Once a refund is approved, it will be processed within{" "}
+            <strong>10–15 business days</strong> to the original payment method.
+            Processing times may vary based on your payment provider or bank.
+          </p>
+        </motion.section>
+
+        {/* Section 5: Cancellation Policy */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-fade-in"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <XCircle className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">4. Cancellation Policy</h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            You may cancel any ongoing subscription, auto-investment plan, or
+            loan service at any time. Cancellations will only apply to{" "}
+            <strong>future payments</strong>. Transactions or services already
+            completed or delivered are not eligible for refunds.
+          </p>
+        </motion.section>
+
+        {/* Section 6: Updates */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-slide-up"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <CalendarClock className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">5. Policy Updates</h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            Aevia Capital reserves the right to amend this Refund Policy at any
+            time. Updates will be published on our official website at{" "}
+            <a
+              href="https://www.aeviacapital.com"
+              target="_blank"
+              className="text-primary hover:underline"
+            >
+              www.aeviacapital.com
+            </a>{" "}
+            with the revised effective date clearly indicated.
+          </p>
+        </motion.section>
+
+        {/* Section 7: Contact */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="bg-card shadow-md p-8 rounded-2xl space-y-6 animate-fade-in"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <Mail className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">6. Contact Us</h2>
+          </div>
+
+          <p className="text-muted-foreground">
+            For refund inquiries or additional support, please reach out to us
+            using the details below:
+          </p>
+
+          <ul className="text-muted-foreground space-y-1">
+            <li>
+              <strong>Email:</strong>{" "}
+              <a
+                href="mailto:support@aeviacapital.com"
+                className="text-primary hover:underline"
+              >
+                support@aeviacapital.com
+              </a>
+            </li>
+            <li>
+              <strong>Address:</strong> C/O Ashley King Ltd, 68 St. Margarets
+              Road, Edgware, England, HA8 9UU
+            </li>
+            <li>
+              <strong>Website:</strong>{" "}
+              <a
+                href="https://www.aeviacapital.com"
+                target="_blank"
+                className="text-primary hover:underline"
+              >
+                www.aeviacapital.com
+              </a>
+            </li>
+          </ul>
+        </motion.section>
+      </div>
+
+      {/* Footer */}
+      <div className = "mb-10"></div>
+      <Footer />
+    </div>
+  );
+}
+
