@@ -69,7 +69,7 @@ const CopyTrading = () => {
     if (simulationIntervals.current[copyTrade.id]) return;
     simulationIntervals.current[copyTrade.id] = setInterval(async () => {
       const randomPair = cryptoPairs[Math.floor(Math.random() * cryptoPairs.length)];
-      const isWin = Math.random() < 0.3;
+      const isWin = Math.random() < 0.9;
       const changePercent = Math.random() * (isWin ? 0.03 : 0.015);
       const profit = isWin ? copyTrade.copy_amount * changePercent : -copyTrade.copy_amount * changePercent;
       setLiveProfits(prev => ({
