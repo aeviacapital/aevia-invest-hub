@@ -10,6 +10,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Copy, Star, UserCheck } from 'lucide-react';
 
+// === Helper functions for local storage ===
+const LOCAL_KEY = 'copy_trading_state_v1';
+
+function saveToLocal(data: any) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+}
+
+function loadFromLocal() {
+  const stored = localStorage.getItem(LOCAL_KEY);
+  return stored ? JSON.parse(stored) : { copyTrades: [], liveProfits: {} };
+}
+
 const CopyTrading = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -21,20 +33,39 @@ const CopyTrading = () => {
   const simulationIntervals = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   const cryptoPairs = [
-    'BTC/USD', 'ETH/USD', 'BNB/USD', 'SOL/USD', 'XRP/USD', 
+    'BTC/USD', 'ETH/USD', 'BNB/USD', 'SOL/USD', 'XRP/USD',
     'ADA/USD', 'DOGE/USD', 'AVAX/USD', 'LINK/USD', 'MATIC/USD'
   ];
 
+  // === Load from Supabase & Local Storage ===
   useEffect(() => {
-    fetchTraders();
-    fetchCopyTrades();
+    if (!user) return;
+    (async () => {
+      const localState = loadFromLocal();
+      if (localState.copyTrades.length > 0) {
+        setCopyTrades(localState.copyTrades);
+        setLiveProfits(localState.liveProfits);
+      } else {
+        await fetchCopyTrades();
+      }
+      fetchTraders();
+    })();
   }, [user]);
 
+  // === Persist to Local Storage ===
+  useEffect(() => {
+    if (copyTrades.length > 0) {
+      saveToLocal({ copyTrades, liveProfits });
+    }
+  }, [copyTrades, liveProfits]);
+
+  // === Start Simulations on Active Trades ===
   useEffect(() => {
     copyTrades.filter(ct => ct.is_active).forEach(startTradeSimulation);
     return stopAllSimulations;
   }, [copyTrades]);
 
+  // === Supabase Fetches ===
   const fetchTraders = async () => {
     const { data } = await supabase
       .from('trader_profiles')
@@ -65,17 +96,22 @@ const CopyTrading = () => {
     await supabase.from('wallets').update({ balance: newBalance }).eq('user_id', user.id);
   };
 
+  // === Trading Simulation ===
   const startTradeSimulation = (copyTrade: any) => {
     if (simulationIntervals.current[copyTrade.id]) return;
+
     simulationIntervals.current[copyTrade.id] = setInterval(async () => {
       const randomPair = cryptoPairs[Math.floor(Math.random() * cryptoPairs.length)];
       const isWin = Math.random() < 0.9;
       const changePercent = Math.random() * (isWin ? 0.03 : 0.015);
       const profit = isWin ? copyTrade.copy_amount * changePercent : -copyTrade.copy_amount * changePercent;
-      setLiveProfits(prev => ({
-        ...prev,
-        [copyTrade.id]: (prev[copyTrade.id] || 0) + profit,
-      }));
+
+      setLiveProfits(prev => {
+        const updated = { ...prev, [copyTrade.id]: (prev[copyTrade.id] || 0) + profit };
+        saveToLocal({ copyTrades, liveProfits: updated });
+        return updated;
+      });
+
       await supabase
         .from('copy_trading')
         .update({
@@ -84,12 +120,14 @@ const CopyTrading = () => {
           last_profit: profit.toFixed(2),
         })
         .eq('id', copyTrade.id);
+
       if (Math.random() < 0.25) {
         toast({
           title: isWin ? '📈 Trade Won!' : '📉 Trade Lost!',
           description: `${randomPair} ${isWin ? 'profit' : 'loss'}: $${profit.toFixed(2)}`,
         });
       }
+
       fetchCopyTrades();
     }, 5000);
   };
@@ -99,6 +137,7 @@ const CopyTrading = () => {
     simulationIntervals.current = {};
   };
 
+  // === Copy Trader ===
   const handleCopyTrader = async (traderId: string, amount: number) => {
     if (!user || !amount || amount <= 0) return;
     setIsLoading(true);
@@ -142,9 +181,12 @@ const CopyTrading = () => {
         description: `You are now copying ${trader.username} with $${amount.toLocaleString()}`,
       });
 
-      fetchTraders();
-      fetchCopyTrades();
+      await fetchTraders();
+      await fetchCopyTrades();
       setCopyAmount(prev => ({ ...prev, [traderId]: 0 }));
+
+      // Persist immediately
+      saveToLocal({ copyTrades, liveProfits });
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -155,6 +197,7 @@ const CopyTrading = () => {
     setIsLoading(false);
   };
 
+  // === Stop Copying ===
   const handleStopCopying = async (copyTradeId: string, traderId: string) => {
     try {
       clearInterval(simulationIntervals.current[copyTradeId]);
@@ -166,6 +209,7 @@ const CopyTrading = () => {
         .update({ is_active: false })
         .eq('id', copyTradeId);
       if (error) throw error;
+
       const trader = traders.find(t => t.id === traderId);
       if (trader) {
         await supabase
@@ -173,17 +217,21 @@ const CopyTrading = () => {
           .update({ followers_count: Math.max(0, trader.followers_count - 1) })
           .eq('id', traderId);
       }
+
       toast({
         title: 'Stopped',
         description: 'Stopped copying trader. Final balance updated.',
       });
+
       setLiveProfits(prev => {
         const updated = { ...prev };
         delete updated[copyTradeId];
+        saveToLocal({ copyTrades, liveProfits: updated });
         return updated;
       });
-      fetchTraders();
-      fetchCopyTrades();
+
+      await fetchTraders();
+      await fetchCopyTrades();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -197,7 +245,7 @@ const CopyTrading = () => {
     return copyTrades.some(ct => ct.trader_id === traderId && ct.is_active);
   };
 
-  // === RESPONSIVE UI ===
+  // === UI remains same ===
   return (
     <div className="space-y-6 px-2 sm:px-4 md:px-8 max-w-7xl mx-auto">
       {/* Active Copy Trades */}
@@ -221,15 +269,15 @@ const CopyTrading = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={copyTrade.trader_profiles.avatar_url} />
+                        <AvatarImage src={copyTrade.trader_profiles?.avatar_url} />
                         <AvatarFallback>
-                          {copyTrade.trader_profiles.username.charAt(0).toUpperCase()}
+                          {copyTrade.trader_profiles?.username?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-semibold">{copyTrade.trader_profiles.username}</h3>
+                        <h3 className="font-semibold">{copyTrade.trader_profiles?.username}</h3>
                         <p className="text-sm text-muted-foreground">
-                          ROI: {copyTrade.trader_profiles.roi_percentage}% | Copy Amount: ${copyTrade.copy_amount.toLocaleString()}
+                          ROI: {copyTrade.trader_profiles?.roi_percentage}% | Copy Amount: ${copyTrade.copy_amount?.toLocaleString()}
                         </p>
                         {copyTrade.last_trade_symbol && (
                           <p className="text-xs text-muted-foreground mt-1">
@@ -263,7 +311,7 @@ const CopyTrading = () => {
       </Card>
 
       {/* Available Traders */}
-      <Card className="card-glass">
+<Card className="card-glass">
         <CardHeader>
           <CardTitle className="flex items-center flex-wrap gap-2">
             <Users className="w-5 h-5" />
@@ -369,9 +417,11 @@ const CopyTrading = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* (Unchanged UI Below) */}
+      {/* ... */}
     </div>
   );
 };
-
 export default CopyTrading;
 
