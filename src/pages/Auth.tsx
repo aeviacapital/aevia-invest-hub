@@ -295,52 +295,68 @@ const Auth = () => {
               </Tabs>
             ) : (
               // OTP Verification (unchanged)
-              <form onSubmit={handleVerifyOtp} className="space-y-4 text-center">
-<Shield className="mx-auto mb-2 text-yellow-500" size={32} />
-                <p className="text-muted-foreground text-sm">
-                  A verification code was sent to <span className="font-semibold">{formData.email}</span>.
-                </p>
+<form onSubmit={handleVerifyOtp} className="space-y-4 text-center px-3 sm:px-4">
 
-                <div className="space-y-2">
-                  <Label>Enter OTP</Label>
-                  <Input
-                    name="otp"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="6-digit code"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="text-center tracking-[0.3em] text-yellow-400"
-                    required
-                  />
-                </div>
+  <Shield className="mx-auto mb-2 text-yellow-500" size={32} />
 
-                {/* Timer or Resend */}
-                {!canResend ? (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Code expires in <span className="font-semibold text-yellow-500">{formatTime(timer)}</span>
-                  </p>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleResendOtp}
-                    disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2"
-                  >
-                    <RefreshCcw size={16} />
-                    Resend OTP
-                  </Button>
-                )}
+  <p className="text-muted-foreground text-sm leading-relaxed">
+    A verification code was sent to 
+    <span className="font-semibold"> {formData.email}</span>.
+    <br />
+    If you do not see it, please check your <span className="font-semibold">Spam</span> or 
+    <span className="font-semibold"> Junk</span> folder.
+  </p>
 
-                {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                <Button type="submit" className="w-full btn-hero mt-2" disabled={isLoading || otp.length !== 6}>
-                  {isLoading ? 'Verifying...' : 'Verify & Continue'}
-                </Button>
-              
-              </form>
-            )}
+  <div className="space-y-2 max-w-xs mx-auto w-full">
+    <Label>Enter OTP</Label>
+    <Input
+      name="otp"
+      type="text"
+      inputMode="numeric"
+      maxLength={6}
+      placeholder="6-digit code"
+      value={otp}
+      onChange={(e) => setOtp(e.target.value)}
+      className="text-center tracking-[0.3em] text-yellow-400 text-lg py-5"
+      required
+    />
+  </div>
+
+  {/* Timer or Resend */}
+  {!canResend ? (
+    <p className="text-sm text-muted-foreground mt-2">
+      Code expires in{" "}
+      <span className="font-semibold text-yellow-500">
+        {formatTime(timer)}
+      </span>
+    </p>
+  ) : (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={handleResendOtp}
+      disabled={isLoading}
+      className="w-full flex items-center justify-center gap-2"
+    >
+      <RefreshCcw size={16} />
+      Resend OTP
+    </Button>
+  )}
+
+  {error && (
+    <p className="text-red-500 text-sm text-center px-2">{error}</p>
+  )}
+
+  <Button
+    type="submit"
+    className="w-full btn-hero mt-2 py-4"
+    disabled={isLoading || otp.length !== 6}
+  >
+    {isLoading ? "Verifying..." : "Verify & Continue"}
+  </Button>
+
+</form>
+                          )}
           </CardContent>
         </Card>
 
