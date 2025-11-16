@@ -144,14 +144,15 @@ const handleApproveWithdrawal = async (withdrawal: any) => {
     // 1️⃣ Update status in the database
     const { error } = await supabase
       .from('withdrawals')
-      .update({ status: 'processing' })
+      .update({ status: 'approved' })
       .eq('id', withdrawal.id);
 
     if (error) throw error;
 
     // 2️⃣ Fire the Edge Function to send email
-    const { data, error: funcError } = await supabase.functions.invoke('withdrawal-approved', {
+    const { data, error: funcError } = await supabase.functions.invoke('withdrawal-action', {
       body: {
+        action: "approve", 
         user_id: withdrawal.user_id,
         email: withdrawal.profile?.email,
         full_name: withdrawal.profile?.full_name,
@@ -178,6 +179,47 @@ const handleApproveWithdrawal = async (withdrawal: any) => {
     });
   }
 };
+const handleRejectWithdrawal = async (withdrawal: any) => {
+  try {
+    // 1️⃣ Update status in the database
+    const { error } = await supabase
+      .from('withdrawals')
+      .update({ status: 'rejected' })
+      .eq('id', withdrawal.id);
+
+    if (error) throw error;
+
+    // 2️⃣ Fire the Edge Function to send email + notification
+    const { data, error: funcError } = await supabase.functions.invoke('withdrawal-action', {
+      body: {
+        action: "reject",
+        user_id: withdrawal.user_id,
+        email: withdrawal.profile?.email,
+        full_name: withdrawal.profile?.full_name,
+        amount: withdrawal.amount,
+        currency: withdrawal.currency,
+      },
+    });
+
+    if (funcError) throw funcError;
+
+    toast({
+      title: 'Withdrawal Rejected',
+      description: `Email notification sent to ${withdrawal.profile?.email}`,
+    });
+
+    // 3️⃣ Refresh list
+    fetchWithdrawals();
+  } catch (err) {
+    console.error('Error rejecting withdrawal:', err);
+    toast({
+      title: 'Error',
+      description: 'Failed to reject withdrawal or send email.',
+      variant: 'destructive',
+    });
+  }
+};
+
   
 
   return (
@@ -265,6 +307,23 @@ const handleApproveWithdrawal = async (withdrawal: any) => {
                     <TableCell>{format(new Date(w.created_at), 'MMM dd, yyyy')}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+  {/* ALWAYS VISIBLE BUTTONS */}
+    <Button
+      size="sm"
+      className="bg-green-600 hover:bg-green-700 text-white"
+      onClick={() => handleApproveWithdrawal(w)}
+    >
+      Accept
+    </Button>
+
+    <Button
+      size="sm"
+      variant="destructive"
+      onClick={() => handleRejectWithdrawal(w)}
+    >
+      Reject
+    </Button>
+                      
                         {/* View details */}
                         <Dialog>
                           <DialogTrigger asChild>

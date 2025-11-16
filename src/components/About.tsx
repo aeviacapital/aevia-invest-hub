@@ -1,7 +1,6 @@
 import React from 'react';
 import { Briefcase, Zap, Shield, TrendingUp, Users } from 'lucide-react';
 
-// Sample data for values and team members
 const coreValues = [
   { 
     icon: Shield, 
