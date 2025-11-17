@@ -546,9 +546,45 @@ if (!isWalletLinked && !isKeyphraseComplete) {
               </div>
             </div>
           </div>
+          
         </CardContent>
+       {/* WITHDRAWAL HISTORY */}
+<div className="pt-6">
+  <h3 className="text-lg font-semibold mb-3 text-center">Withdrawal History</h3>
+
+  {isLoading ? (
+    <p>Loading withdrawals...</p>
+  ) : withdrawals?.length === 0 ? (
+    <p className="text-muted-foreground">No withdrawals found.</p>
+  ) : (
+    <div className="space-y-3">
+      {withdrawals?.map((w) => (
+        <div 
+          key={w.id}
+          className="p-4 border rounded-lg flex justify-between items-center"
+        >
+          <div>
+            <p className="font-medium">
+              {w.currency} - ${w.amount}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {new Date(w.created_at).toLocaleString()}
+            </p>
+          </div>
+
+          <Badge variant="outline">
+            {w.status || "pending"}
+          </Badge>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+ 
+
       </Card>
     </div>
+
   );
 };
 export default Withdrawals;

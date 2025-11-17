@@ -144,7 +144,7 @@ const handleApproveWithdrawal = async (withdrawal: any) => {
     // 1️⃣ Update status in the database
     const { error } = await supabase
       .from('withdrawals')
-      .update({ status: 'approved' })
+      .update({ status: 'completed' })
       .eq('id', withdrawal.id);
 
     if (error) throw error;
