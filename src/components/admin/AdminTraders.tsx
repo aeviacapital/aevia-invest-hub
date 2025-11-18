@@ -17,17 +17,20 @@ const AdminTraders = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTrader, setEditingTrader] = useState<any>(null);
-  const [traderForm, setTraderForm] = useState({
-    username: '',
-    bio: '',
-    avatar_url: '',
-    total_trades: 0,
-    winning_trades: 0,
-    roi_percentage: 0,
-    min_copy_amount: 100,
-    max_copy_amount: 10000,
-    is_active: true
-  });
+  const [uploadingImage, setUploadingImage] = useState(false);
+const [traderForm, setTraderForm] = useState({
+  username: '',
+  bio: '',
+  avatar_url: '',
+  total_trades: 0,
+  winning_trades: 0,
+  roi_percentage: 0,
+  min_copy_amount: 100,
+  max_copy_amount: 10000,
+  followers_count: 0,
+  is_active: true
+});
+  
 
   useEffect(() => {
     fetchTraders();
@@ -97,17 +100,15 @@ const AdminTraders = () => {
 
   const handleEdit = (trader: any) => {
     setEditingTrader(trader);
-    setTraderForm({
-      username: trader.username,
-      bio: trader.bio || '',
-      avatar_url: trader.avatar_url || '',
-      total_trades: trader.total_trades,
-      winning_trades: trader.winning_trades,
-      roi_percentage: trader.roi_percentage,
-      min_copy_amount: trader.min_copy_amount,
-      max_copy_amount: trader.max_copy_amount,
-      is_active: trader.is_active
-    });
+setTraderForm({
+  name: trader.name,
+  profit_loss: trader.profit_loss,
+  leverage: trader.leverage,
+  total_trades: trader.total_trades,
+  win_rate: trader.win_rate,
+  followers_count: trader.followers_count || "",
+  avatar_url: trader.avatar_url || "",
+});
     setIsDialogOpen(true);
   };
 
@@ -137,22 +138,23 @@ const AdminTraders = () => {
       });
     }
   };
+const resetForm = () => {
+  setEditingTrader(null);
+  setTraderForm({
+    username: '',
+    bio: '',
+    avatar_url: '',
+    total_trades: 0,
+    winning_trades: 0,
+    roi_percentage: 0,
+    min_copy_amount: 100,
+    max_copy_amount: 10000,
+    followers_count: 0,
+    is_active: true
+  });
+};
 
-  const resetForm = () => {
-    setEditingTrader(null);
-    setTraderForm({
-      username: '',
-      bio: '',
-      avatar_url: '',
-      total_trades: 0,
-      winning_trades: 0,
-      roi_percentage: 0,
-      min_copy_amount: 100,
-      max_copy_amount: 10000,
-      is_active: true
-    });
-  };
-
+  
   return (
     <Card className="card-glass">
       <CardHeader>
@@ -195,14 +197,67 @@ const AdminTraders = () => {
                       onChange={(e) => setTraderForm(prev => ({ ...prev, username: e.target.value }))}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Avatar URL</Label>
-                    <Input
-                      placeholder="https://..."
-                      value={traderForm.avatar_url}
-                      onChange={(e) => setTraderForm(prev => ({ ...prev, avatar_url: e.target.value }))}
-                    />
-                  </div>
+<div className="space-y-2">
+  <Label>Avatar</Label>
+
+  <Input
+    type="file"
+    accept="image/*"
+    onChange={async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setUploadingImage(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('trader-avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast({
+          title: "Upload Failed",
+          description: uploadError.message,
+          variant: "destructive"
+        });
+        setUploadingImage(false);
+        return;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('trader-avatars')
+        .getPublicUrl(filePath);
+
+      if (urlData?.publicUrl) {
+        setTraderForm(prev => ({ ...prev, avatar_url: urlData.publicUrl }));
+      }
+
+      toast({
+        title: "Uploaded",
+        description: "Avatar uploaded successfully!"
+      });
+
+      setUploadingImage(false);
+    }}
+  />
+
+  {uploadingImage && (
+    <p className="text-xs text-muted-foreground">Uploading...</p>
+  )}
+
+  {traderForm.avatar_url && (
+    <img
+      src={traderForm.avatar_url}
+      alt="avatar preview"
+      className="w-20 h-20 rounded-full object-cover mt-2 border"
+    />
+  )}
+</div>
+                  
                 </div>
 
                 <div className="space-y-2">
@@ -261,6 +316,15 @@ const AdminTraders = () => {
                     />
                   </div>
                 </div>
+<div className="space-y-2">
+  <Label>Followers</Label>
+  <Input
+    type="number"
+    value={traderForm.followers_count}
+    onChange={(e) => setTraderForm(prev => ({ ...prev, followers_count: parseInt(e.target.value || '0', 10) }))}
+  />
+</div>
+                
 
                 <Button
                   onClick={handleSubmit}
