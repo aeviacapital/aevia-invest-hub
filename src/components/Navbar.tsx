@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/hooks/useRole";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import GoogleTranslate from "@/components/GoogleTranslate"; 
 import {LanguageSelector} from "@/components/LanguageSelector"; 
 
 const Navbar = () => {
@@ -61,7 +60,6 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-sm border-b border-border z-50">
     
-          <GoogleTranslate />
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
