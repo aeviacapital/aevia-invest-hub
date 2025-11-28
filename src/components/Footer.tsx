@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Mail, MapPin, MessageCircle } from "lucide-react";
+import { Mail, MapPin, MessageCircle } from "lucide-react";
 import {Link} from "react-router-dom"; 
 
 const Footer = () => {
@@ -27,8 +27,6 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: Facebook, href: "https://www.facebook.com/share/1F96kCxdTj/", label: "Facebook" },
-    { icon: Twitter, href: "https://x.com/Aeviacapital?t=ljAlEjGh9aPZdJjCGtA-ig&s=09", label: "X (Twitter)" },
     { icon: MessageCircle, href: "https://wa.me/447946189968", label: "WhatsApp" }
   ];
 
