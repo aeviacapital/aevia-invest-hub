@@ -87,7 +87,7 @@ const Navbar = () => {
               </Link>
             ))}
             <a
-              href="https://wa.me/447946189968"
+              href="https://wa.me/447474417825"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-muted-foreground hover:text-primary transition-smooth"
@@ -158,7 +158,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <a
-                href="https://wa.me/447946189968"
+                href="https://wa.me/447474417825"
                 // ... (rest of mobile nav) ...
               >
                 <MessageCircle className="w-4 h-4 mr-2" />

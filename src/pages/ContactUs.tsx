@@ -23,12 +23,11 @@ const socialLinks = [
     href: "https://x.com/Aeviacapital?t=ljAlEjGh9aPZdJjCGtA-ig&s=09",
     label: "X (Twitter)",
   },
-  {
-    icon: MessageSquare,
-    href: "https://wa.me/447946189968",
-    label: "WhatsApp",
-  },
-];
+      {
+        icon: MessageSquare,
+        href: "https://wa.me/447474417825",
+        label: "WhatsApp",
+      },];
 
 const ContactUs = () => {
   return (
@@ -71,7 +70,7 @@ const ContactUs = () => {
               Connect instantly with our support team.
             </p>
             <a
-              href="https://wa.me/447946189968?text=Hello%20Aevia%20Capital%20Support%2C%20I%20need%20assistance."
+              href="https://wa.me/447474417825?text=Hello%20Aevia%20Capital%20Support%2C%20I%20need%20assistance."
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary font-medium hover:underline"
@@ -139,7 +138,7 @@ const ContactUs = () => {
             Available Monday – Friday, 9:00 AM – 6:00 PM
           </p>
           <span className="text-primary font-medium text-lg">
-            +44 7946 189968
+            +44 7474 417825
           </span>
         </div>
       </div>

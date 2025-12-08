@@ -27,7 +27,7 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: MessageCircle, href: "https://wa.me/447946189968", label: "WhatsApp" }
+    { icon: MessageCircle, href: "https://wa.me/447474417825", label: "WhatsApp" }
   ];
 
   return (
@@ -63,8 +63,8 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <MessageCircle className="w-4 h-4 mr-3 text-primary" />
-                  <a href="https://wa.me/447946189968" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    +44 7946 189968
+                  <a href="https://wa.me/447474417825" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    +44 7474 417825
                   </a>
                 </div>
                 <div className="flex items-start text-muted-foreground">
