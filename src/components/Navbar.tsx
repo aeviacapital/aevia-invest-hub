@@ -1,5 +1,5 @@
 import { useState , useCallback} from "react";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/hooks/useRole";
@@ -87,13 +87,22 @@ const Navbar = () => {
               </Link>
             ))}
             <a
-              href="https://wa.me/447474417825"
+              href="https://wa.me/447472876388"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-muted-foreground hover:text-primary transition-smooth"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               WhatsApp
+            </a>
+            <a
+              href="https://t.me/Aeviacapital_support"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-muted-foreground hover:text-primary transition-smooth"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Telegram
             </a>
           </div>
             
@@ -158,11 +167,18 @@ const Navbar = () => {
                 </Link>
               ))}
               <a
-                href="https://wa.me/447474417825"
+                href="https://wa.me/447472876388"
                 // ... (rest of mobile nav) ...
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 WhatsApp Support
+              </a>
+              <a
+                href="https://t.me/Aeviacapital_support"
+                // ... (rest of mobile nav) ...
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Telegram Support
               </a>
               <div className="flex flex-col space-y-2 px-3 pt-4">
                 {user ? (

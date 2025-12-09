@@ -1,4 +1,4 @@
-import { Mail, MapPin, MessageCircle } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Send } from "lucide-react";
 import {Link} from "react-router-dom"; 
 
 const Footer = () => {
@@ -27,7 +27,8 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: MessageCircle, href: "https://wa.me/447474417825", label: "WhatsApp" }
+    { icon: MessageCircle, href: "https://wa.me/447472876388", label: "WhatsApp" },
+    { icon: Send, href: "https://t.me/Aeviacapital_support", label: "Telegram" }
   ];
 
   return (
@@ -63,8 +64,8 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <MessageCircle className="w-4 h-4 mr-3 text-primary" />
-                  <a href="https://wa.me/447474417825" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    +44 7474 417825
+                  <a href="https://wa.me/447472876388" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    +44 7472 876388
                   </a>
                 </div>
                 <div className="flex items-start text-muted-foreground">

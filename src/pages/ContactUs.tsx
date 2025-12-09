@@ -25,8 +25,13 @@ const socialLinks = [
   },
       {
         icon: MessageSquare,
-        href: "https://wa.me/447474417825",
+        href: "https://wa.me/447472876388",
         label: "WhatsApp",
+      },
+      {
+        icon: Send,
+        href: "https://t.me/Aeviacapital_support",
+        label: "Telegram",
       },];
 
 const ContactUs = () => {
@@ -70,7 +75,24 @@ const ContactUs = () => {
               Connect instantly with our support team.
             </p>
             <a
-              href="https://wa.me/447474417825?text=Hello%20Aevia%20Capital%20Support%2C%20I%20need%20assistance."
+              href="https://wa.me/447472876388?text=Hello%20Aevia%20Capital%20Support%2C%20I%20need%20assistance."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary font-medium hover:underline"
+            >
+              Start Chat
+            </a>
+          </div>
+
+          {/* Telegram */}
+          <div className="bg-card border border-border rounded-2xl p-6 text-center hover:bg-accent/30 transition-all animate-slide-up">
+            <Send className="mx-auto h-10 w-10 text-primary mb-3" />
+            <h3 className="text-xl font-semibold mb-2">Chat on Telegram</h3>
+            <p className="text-muted-foreground mb-3">
+              Connect instantly with our support team.
+            </p>
+            <a
+              href="https://t.me/Aeviacapital_support"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary font-medium hover:underline"
@@ -138,7 +160,7 @@ const ContactUs = () => {
             Available Monday – Friday, 9:00 AM – 6:00 PM
           </p>
           <span className="text-primary font-medium text-lg">
-            +44 7474 417825
+            +44 7472 876388
           </span>
         </div>
       </div>

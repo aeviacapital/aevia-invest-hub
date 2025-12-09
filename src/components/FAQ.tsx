@@ -80,10 +80,16 @@ const FAQ = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
 
            <a
-  href="https://wa.me/+447946189968"
+  href="https://wa.me/447472876388"
   className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
 >
   Message us on WhatsApp
+</a>
+<a
+  href="httpshttps://t.me/Aeviacapital_support"
+  className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+>
+  Message us on Telegram
 </a> 
             <a 
               href="#"

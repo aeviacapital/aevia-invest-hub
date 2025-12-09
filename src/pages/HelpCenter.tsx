@@ -11,6 +11,7 @@ import {
   User,
   ArrowRightCircle,
   MessageSquare,
+  Send,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -115,12 +116,29 @@ const HelpCenter = () => {
                 Chat with our support team
               </p>
               <a
-                href="https://wa.me/447946189968"
+                href="https://wa.me/447472876388"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary font-medium flex items-center gap-1 hover:underline"
               >
                 Chat on WhatsApp <ArrowRightCircle className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Telegram */}
+            <div className="bg-card border border-border rounded-2xl p-5 flex flex-col items-center text-center hover:bg-accent/30 transition-all">
+              <Send className="h-7 w-7 text-primary mb-2" />
+              <h3 className="font-semibold mb-1">Telegram Support</h3>
+              <p className="text-muted-foreground text-sm mb-3">
+                Chat with our support team
+              </p>
+              <a
+                href="https://t.me/Aeviacapital_support"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-medium flex items-center gap-1 hover:underline"
+              >
+                Chat on Telegram <ArrowRightCircle className="h-4 w-4" />
               </a>
             </div>
 
