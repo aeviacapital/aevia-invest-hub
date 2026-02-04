@@ -67,7 +67,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2">
   <img 
     src="/logo.png" 
-    alt="Aevia Capital Logo"
+    alt="Avia Capital Logo"
     className="h-20 sm:h-22 w-auto" // Set the height and auto-scale the width
   />
   </Link>
@@ -96,7 +96,7 @@ const Navbar = () => {
               WhatsApp
             </a>
             <a
-              href="https://t.me/Aeviacapital_support"
+              href="https://t.me/Aviacapital_support"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-muted-foreground hover:text-primary transition-smooth"
@@ -174,7 +174,7 @@ const Navbar = () => {
                 WhatsApp Support
               </a>
               <a
-                href="https://t.me/Aeviacapital_support"
+                href="https://t.me/Aviacapital_support"
                 // ... (rest of mobile nav) ...
               >
                 <Send className="w-4 h-4 mr-2" />

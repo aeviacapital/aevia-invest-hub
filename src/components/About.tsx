@@ -49,7 +49,7 @@ const About = () => {
         {/* About Header and Mission */}
         <div className="text-center max-w-4xl mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4">
-            The AeviaCapital Advantage
+            The Aviacapital Advantage
           </h2>
           <p className="text-xl text-muted-foreground">
             We are a premier investment management firm built on the foundation of disciplined strategy, technological edge, and unwavering client trust. Our mission is to generate sustainable long-term capital growth for our investors.

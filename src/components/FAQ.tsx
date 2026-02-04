@@ -9,7 +9,7 @@ const FAQ = () => {
   const faqs = [
     {
       question: "How does it work?",
-      answer: "AeviaCapital provides a comprehensive investment platform where you can access crypto trading simulation, copy trading, real estate investments, and oil & gas opportunities. Simply create an account, complete KYC verification, deposit funds, and start investing according to your risk tolerance and investment goals."
+      answer: "Aviacapital provides a comprehensive investment platform where you can access crypto trading simulation, copy trading, real estate investments, and oil & gas opportunities. Simply create an account, complete KYC verification, deposit funds, and start investing according to your risk tolerance and investment goals."
     },
     {
       question: "Is my data secure?",
@@ -50,7 +50,7 @@ const FAQ = () => {
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Find answers to common questions about our investment platform, 
-            security measures, and how to get started with AeviaCapital.
+            security measures, and how to get started with Aviacapital.
           </p>
         </div>
 
@@ -86,7 +86,7 @@ const FAQ = () => {
   Message us on WhatsApp
 </a>
 <a
-  href="httpshttps://t.me/Aeviacapital_support"
+  href="httpshttps://t.me/Aviacapital_support"
   className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
 >
   Message us on Telegram

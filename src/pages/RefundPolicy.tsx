@@ -29,7 +29,7 @@ export default function RefundPolicy() {
       >
         <RefreshCw className="w-16 h-16 mx-auto text-primary animate-float" />
         <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-2">
-          Aevia Capital Refund Policy
+          Avia Capital Refund Policy
         </h1>
         <p className="text-muted-foreground text-sm">
           Effective Date: November 12, 2025
@@ -52,7 +52,7 @@ export default function RefundPolicy() {
           </div>
 
           <p className="text-muted-foreground">
-            At <strong>Aevia Capital</strong>, we are committed to maintaining
+            At <strong>Avia Capital</strong>, we are committed to maintaining
             transparency and ensuring customer satisfaction across all our
             investment and financial services. This Refund Policy outlines the
             conditions under which refunds are granted and the process for
@@ -79,7 +79,7 @@ export default function RefundPolicy() {
 
           <ul className="list-disc list-inside text-muted-foreground space-y-2">
             <li>
-              <strong>Service Not Delivered:</strong> If Aevia Capital fails to
+              <strong>Service Not Delivered:</strong> If Avia Capital fails to
               provide the agreed service or product within the specified
               timeframe.
             </li>
@@ -137,10 +137,10 @@ export default function RefundPolicy() {
             <li>
               Email our support team at{" "}
               <a
-                href="mailto:support@aeviacapital.com"
+                href="mailto:support@aviacapital.com"
                 className="text-primary hover:underline"
               >
-                support@aeviacapital.com
+                support@aviacapital.com
               </a>{" "}
               with the subject line <em>“Refund Request.”</em>
             </li>
@@ -217,14 +217,14 @@ export default function RefundPolicy() {
           </div>
 
           <p className="text-muted-foreground">
-            Aevia Capital reserves the right to amend this Refund Policy at any
+            Avia Capital reserves the right to amend this Refund Policy at any
             time. Updates will be published on our official website at{" "}
             <a
-              href="https://www.aeviacapital.com"
+              href="https://www.aviacapital.com"
               target="_blank"
               className="text-primary hover:underline"
             >
-              www.aeviacapital.com
+              www.aviacapital.com
             </a>{" "}
             with the revised effective date clearly indicated.
           </p>
@@ -252,10 +252,10 @@ export default function RefundPolicy() {
             <li>
               <strong>Email:</strong>{" "}
               <a
-                href="mailto:support@aeviacapital.com"
+                href="mailto:support@aviacapital.com"
                 className="text-primary hover:underline"
               >
-                support@aeviacapital.com
+                support@aviacapital.com
               </a>
             </li>
             <li>
@@ -265,11 +265,11 @@ export default function RefundPolicy() {
             <li>
               <strong>Website:</strong>{" "}
               <a
-                href="https://www.aeviacapital.com"
+                href="https://www.aviacapital.com"
                 target="_blank"
                 className="text-primary hover:underline"
               >
-                www.aeviacapital.com
+                www.aviacapital.com
               </a>
             </li>
           </ul>

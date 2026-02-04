@@ -54,7 +54,7 @@ export const AdminSettings = () => {
     try {
       const codes = [];
       for (let i = 0; i < newCodeCount; i++) {
-        const code = `AEVIA${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        const code = `AVIA${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
         codes.push({
           code,
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
@@ -230,7 +230,7 @@ export const AdminSettings = () => {
                 <Label htmlFor="platformName">Platform Name</Label>
                 <Input
                   id="platformName"
-                  defaultValue="AeviaCapital"
+                  defaultValue="Aviacapital"
                   placeholder="Enter platform name"
                 />
               </div>
@@ -239,7 +239,7 @@ export const AdminSettings = () => {
                 <Input
                   id="supportEmail"
                   type="email"
-                  placeholder="support@aeviacapital.com"
+                  placeholder="support@aviacapital.com"
                 />
               </div>
             </div>

@@ -29,10 +29,9 @@ export default function PrivacyPolicy() {
         className="text-center mb-16"
       >
         <ShieldCheck className="w-16 h-16 mx-auto text-primary animate-float" />
-        <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-2">
-          Aevia Capital Privacy & Security Policy
-        </h1>
-        <p className="text-muted-foreground text-sm">
+                  <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-2">
+                  Avia Capital Privacy & Security Policy
+                </h1>        <p className="text-muted-foreground text-sm">
           Effective Date: November 12, 2025
         </p>
       </motion.header>
@@ -53,7 +52,7 @@ export default function PrivacyPolicy() {
           </div>
 
           <p className="text-muted-foreground">
-            Aevia Capital (“we,” “our,” or “us”) respects your privacy and is
+            Avia Capital (“we,” “our,” or “us”) respects your privacy and is
             committed to protecting your personal information. This Privacy
             Policy explains how we collect, use, disclose, and safeguard your
             data when you use our website and services.
@@ -153,10 +152,10 @@ export default function PrivacyPolicy() {
           <p className="text-muted-foreground">
             Email:{" "}
             <a
-              href="mailto:support@aeviacapital.com"
+              href="mailto:support@aviacapital.com"
               className="text-primary hover:underline"
             >
-              support@aeviacapital.com
+              support@aviacapital.com
             </a>
             <br />
             Address: C/O Ashley King Ltd, 68 St. Margarets Road, Edgware,
@@ -164,11 +163,11 @@ export default function PrivacyPolicy() {
             <br />
             Website:{" "}
             <a
-              href="https://www.aeviacapital.com"
+              href="https://www.aviacapital.com"
               className="text-primary hover:underline"
               target="_blank"
             >
-              www.aeviacapital.com
+              www.aviacapital.com
             </a>
           </p>
         </motion.section>
@@ -186,11 +185,11 @@ export default function PrivacyPolicy() {
         >
           <div className="flex items-center gap-3 mb-6">
             <Lock className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-semibold">Aevia Capital Security Policy</h2>
+            <h2 className="text-2xl font-semibold">Avia Capital Security Policy</h2>
           </div>
 
           <p className="text-muted-foreground">
-            At Aevia Capital, your safety is our top priority. We implement
+            At Avia Capital, your safety is our top priority. We implement
             leading-edge technologies and rigorous protocols to ensure your
             investments and data remain secure.
           </p>

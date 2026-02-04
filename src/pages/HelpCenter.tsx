@@ -22,11 +22,11 @@ const HelpCenter = () => {
       icon: <CreditCard className="text-primary h-6 w-6" />,
       question: "How do I request a refund?",
       answer:
-        "To request a refund, email support@aeviacapital.com with your full name, transaction details, and reason for the request. Our team will respond within 7 business days.",
+        "To request a refund, email support@aviacapital.com with your full name, transaction details, and reason for the request. Our team will respond within 7 business days.",
     },
     {
       icon: <User className="text-primary h-6 w-6" />,
-      question: "How do I verify my Aevia Capital account?",
+      question: "How do I verify my Avia Capital account?",
       answer:
         "Log in to your dashboard, go to ‘Account Settings,’ and upload a valid ID and proof of address. Verification usually completes within 24–48 hours.",
     },
@@ -40,7 +40,7 @@ const HelpCenter = () => {
       icon: <BookOpen className="text-primary h-6 w-6" />,
       question: "Where can I learn more about investing with Aevia?",
       answer:
-        "Visit our Resources section for guides, insights, and tutorials on safe and effective investing with Aevia Capital.",
+        "Visit our Resources section for guides, insights, and tutorials on safe and effective investing with Avia Capital.",
     },
   ];
 
@@ -101,10 +101,10 @@ const HelpCenter = () => {
                 Get assistance via email
               </p>
               <a
-                href="mailto:support@aeviacapital.com"
+                href="mailto:support@aviacapital.com"
                 className="text-primary font-medium flex items-center gap-1 hover:underline"
               >
-                support@aeviacapital.com <ArrowRightCircle className="h-4 w-4" />
+                support@aviacapital.com <ArrowRightCircle className="h-4 w-4" />
               </a>
             </div>
 
@@ -133,7 +133,7 @@ const HelpCenter = () => {
                 Chat with our support team
               </p>
               <a
-                href="https://t.me/Aeviacapital_support"
+                href="https://t.me/Aviacapital_support"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary font-medium flex items-center gap-1 hover:underline"
@@ -150,12 +150,12 @@ const HelpCenter = () => {
                 C/O Ashley King Ltd, 68 St. Margarets Road, Edgware, England, HA8 9UU
               </p>
               <a
-                href="https://www.aeviacapital.com"
+                href="https://www.aviacapital.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary font-medium flex items-center gap-1 hover:underline"
               >
-                www.aeviacapital.com <ArrowRightCircle className="h-4 w-4" />
+                www.aviacapital.com <ArrowRightCircle className="h-4 w-4" />
               </a>
             </div>
           </div>

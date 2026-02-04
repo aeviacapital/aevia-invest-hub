@@ -24,7 +24,7 @@ const TermsOfService = () => {
           <div className="text-center mb-12 animate-slide-up">
             <ShieldCheck className="mx-auto h-14 w-14 text-primary mb-4 animate-float" />
             <h1 className="text-4xl font-bold mb-2 text-primary">
-              Aevia Capital Terms of Service
+              Avia Capital Terms of Service
             </h1>
             <p className="text-muted-foreground text-sm">
               Effective Date: {new Date().toLocaleDateString()}
@@ -33,7 +33,7 @@ const TermsOfService = () => {
 
           {/* Intro */}
           <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
-            Welcome to <span className="text-primary font-semibold">Aevia Capital</span>. 
+            Welcome to <span className="text-primary font-semibold">Avia Capital</span>. 
             By accessing or using our website, investment platform, or any of our 
             services, you agree to these Terms of Service ("Terms"). Please read 
             them carefully before proceeding. If you do not agree with these Terms, 
@@ -50,7 +50,7 @@ const TermsOfService = () => {
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 By creating an account, investing, or using any service provided by 
-                Aevia Capital, you acknowledge that you have read, understood, and 
+                Avia Capital, you acknowledge that you have read, understood, and 
                 agree to these Terms, as well as our Privacy Policy and Refund Policy.
               </p>
             </section>
@@ -76,7 +76,7 @@ const TermsOfService = () => {
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 All investments carry inherent risks. Past performance does not 
-                guarantee future results. Aevia Capital does not provide financial 
+                guarantee future results. Avia Capital does not provide financial 
                 advice or guarantees of profit. You should consult independent 
                 advisors before making financial decisions.
               </p>
@@ -103,7 +103,7 @@ const TermsOfService = () => {
                 <h2 className="text-2xl font-semibold">5. Limitation of Liability</h2>
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                To the fullest extent permitted by law, Aevia Capital and its 
+                To the fullest extent permitted by law, Avia Capital and its 
                 affiliates shall not be held liable for indirect, incidental, or 
                 consequential damages arising from the use of our platform, including 
                 but not limited to lost profits, financial loss, or service interruption.
@@ -134,10 +134,10 @@ const TermsOfService = () => {
               <li className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-primary" />
                 <a
-                  href="mailto:support@aeviacapital.com"
+                  href="mailto:support@aviacapital.com"
                   className="hover:text-primary transition-colors"
                 >
-                  support@aeviacapital.com
+                  support@aviacapital.com
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -149,12 +149,12 @@ const TermsOfService = () => {
               <li className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-primary" />
                 <a
-                  href="https://www.aeviacapital.com"
+                  href="https://www.aviacapital.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-primary transition-colors"
                 >
-                  www.aeviacapital.com
+                  www.aviacapital.com
                 </a>
               </li>
             </ul>

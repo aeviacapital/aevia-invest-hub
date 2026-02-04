@@ -36,28 +36,28 @@ const BRAND_ACCENT = "#b58900";
 const templates = [
   {
     id: "default",
-    name: "Aeviacapital Classic",
-    header: "Welcome to Aeviacapital",
+    name: "Aviacapital Classic",
+    header: "Welcome to Aviacapital",
     footer:
-      "© 2025 Aeviacapital — Empowering your financial future. All rights reserved.",
+      "© 2025 Aviacapital — Empowering your financial future. All rights reserved.",
     accent: BRAND_ACCENT,
     preview: "Professional greeting email template with simple design.",
   },
   {
     id: "investment",
     name: "Investment Update",
-    header: "Your Aeviacapital Investment Update",
+    header: "Your Aviacapital Investment Update",
     footer:
-      "Aeviacapital Investments — Growing wealth through smarter decisions.",
+      "Aviacapital Investments — Growing wealth through smarter decisions.",
     accent: BRAND_ACCENT,
     preview: "Notify users about their investment performance or changes.",
   },
   {
     id: "security",
     name: "Security Notice",
-    header: "Important Security Notice from Aeviacapital",
+    header: "Important Security Notice from Aviacapital",
     footer:
-      "Stay secure. Aeviacapital will never ask for your password or wallet keys.",
+      "Stay secure. Aviacapital will never ask for your password or wallet keys.",
     accent: BRAND_ACCENT,
     preview: "Send important security alerts to users.",
   },

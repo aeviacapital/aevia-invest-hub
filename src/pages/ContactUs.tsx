@@ -20,7 +20,7 @@ const socialLinks = [
   },
   {
     icon: Twitter,
-    href: "https://x.com/Aeviacapital?t=ljAlEjGh9aPZdJjCGtA-ig&s=09",
+    href: "https://x.com/Aviacapital?t=ljAlEjGh9aPZdJjCGtA-ig&s=09",
     label: "X (Twitter)",
   },
       {
@@ -30,7 +30,7 @@ const socialLinks = [
       },
       {
         icon: Send,
-        href: "https://t.me/Aeviacapital_support",
+        href: "https://t.me/Aviacapital_support",
         label: "Telegram",
       },];
 
@@ -45,7 +45,7 @@ const ContactUs = () => {
           <Send className="mx-auto h-16 w-16 text-primary mb-4" />
           <h1 className="text-4xl font-bold mb-2">Contact Us</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Get in touch with Aevia Capital — we’re always here to assist you
+            Get in touch with Avia Capital — we’re always here to assist you
             with any inquiries, support, or partnership opportunities.
           </p>
         </div>
@@ -60,10 +60,10 @@ const ContactUs = () => {
               Reach out via email for general support or business inquiries.
             </p>
             <a
-              href="mailto:support@aeviacapital.com"
+              href="mailto:support@aviacapital.com"
               className="text-primary font-medium hover:underline"
             >
-              support@aeviacapital.com
+              support@aviacapital.com
             </a>
           </div>
 
@@ -75,7 +75,7 @@ const ContactUs = () => {
               Connect instantly with our support team.
             </p>
             <a
-              href="https://wa.me/447472876388?text=Hello%20Aevia%20Capital%20Support%2C%20I%20need%20assistance."
+              href="https://wa.me/447472876388?text=Hello%20Avia%20Capital%20Support%2C%20I%20need%20assistance."
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary font-medium hover:underline"
@@ -92,7 +92,7 @@ const ContactUs = () => {
               Connect instantly with our support team.
             </p>
             <a
-              href="https://t.me/Aeviacapital_support"
+              href="https://t.me/Aviacapital_support"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary font-medium hover:underline"
@@ -110,12 +110,12 @@ const ContactUs = () => {
               9UU
             </p>
             <a
-              href="https://www.aeviacapital.com"
+              href="https://www.aviacapital.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary font-medium hover:underline"
             >
-              www.aeviacapital.com
+              www.aviacapital.com
             </a>
           </div>
         </div>
@@ -124,7 +124,7 @@ const ContactUs = () => {
         <div className="text-center animate-scale-in">
           <h2 className="text-3xl font-semibold mb-6">Connect With Us</h2>
           <p className="text-muted-foreground mb-8">
-            Follow Aevia Capital on our social platforms for updates, insights,
+            Follow Avia Capital on our social platforms for updates, insights,
             and announcements.
           </p>
 

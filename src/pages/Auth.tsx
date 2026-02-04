@@ -113,7 +113,7 @@ const Auth = () => {
     setError('');
 
     try {
-      const res = await fetch("https://aeviacapital.onrender.com/verify-otp", {
+      const res = await fetch("https://aviacapital.onrender.com/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -207,7 +207,7 @@ const Auth = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-          <h1 className="text-3xl font-bold text-gradient-primary mb-2">AeviaCapital</h1>
+          <h1 className="text-3xl font-bold text-gradient-primary mb-2">Aviacapital</h1>
           <p className="text-muted-foreground">Access your investment platform</p>
         </div>
 

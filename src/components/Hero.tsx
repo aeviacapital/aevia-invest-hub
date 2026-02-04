@@ -1,23 +1,33 @@
 import { ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroPhoneMockup from "@/assets/aeviadashboard.jpg";
-import {useNavigate} from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
   return (
     <section id="home" className="pt-20 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="animate-fade-in">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <TrendingUp className="w-4 h-4 text-primary mr-2" />
-              <span className="text-sm font-medium text-primary">Trusted by 10,000+ Investors</span>
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="inline-flex items-center w-fit px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                <TrendingUp className="w-4 h-4 text-primary mr-2" />
+                <span className="text-sm font-medium text-primary">Trusted by 10,000+ Investors</span>
+              </div>
+              
+              {/* Added Company Details */}
+              <div className="px-1">
+                <p className="text-xs font-semibold tracking-wide uppercase text-muted-foreground/80">
+                  AVIA CAPITAL LIMITED <span className="mx-2 opacity-50">|</span> Company number 11294842
+                </p>
+              </div>
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              AeviaCapital – <span className="text-gradient-primary">Smarter</span><br />
+              Aviacapital – <span className="text-gradient-primary">Smarter</span><br />
               Financial Solutions for<br />
               a <span className="text-gradient-secondary">Brighter Future</span>
             </h1>
@@ -29,11 +39,11 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Button className="btn-hero group" onClick ={()=>navigate("/auth")} >
+              <Button className="btn-hero group" onClick={() => navigate("/auth")}>
                 Get Started
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="outline" size="lg" className="border-border hover:border-primary" onClick={()=>{navigate("/auth")}}>
+              <Button variant="outline" size="lg" className="border-border hover:border-primary" onClick={() => navigate("/auth")}>
                 Sign in
               </Button>
             </div>
@@ -60,7 +70,7 @@ const Hero = () => {
             <div className="relative z-10">
               <img
                 src={heroPhoneMockup}
-                alt="AeviaCapital Mobile App"
+                alt="Aviacapital Mobile App"
                 className="w-full max-w-md mx-auto lg:max-w-lg drop-shadow-2xl"
               />
             </div>
@@ -84,5 +94,4 @@ const Hero = () => {
     </section>
   );
 };
-
 export default Hero;

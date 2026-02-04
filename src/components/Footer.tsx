@@ -28,7 +28,7 @@ const Footer = () => {
 
   const socialLinks = [
     { icon: MessageCircle, href: "https://wa.me/447472876388", label: "WhatsApp" },
-    { icon: Send, href: "https://t.me/Aeviacapital_support", label: "Telegram" }
+    { icon: Send, href: "https://t.me/Aviacapital_support", label: "Telegram" }
   ];
 
   return (
@@ -43,7 +43,7 @@ const Footer = () => {
               <Link to="/" className="flex items-center space-x-2">
   <img 
     src="/logo.png" 
-    alt="Aevia Capital Logo"
+    alt="Avia Capital Logo"
     className="h-20 sm:h-22 w-auto" // Set the height and auto-scale the width
   />
   </Link>
@@ -60,7 +60,7 @@ const Footer = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center text-muted-foreground">
                   <Mail className="w-4 h-4 mr-3 text-primary" />
-                  <span>support@aeviacapital.com</span>
+                  <span>support@aviacapital.com</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <MessageCircle className="w-4 h-4 mr-3 text-primary" />
@@ -166,7 +166,7 @@ const Footer = () => {
         <div className="border-t border-border py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-sm text-muted-foreground">
-              © {currentYear} AeviaCapital. All rights reserved.
+              © {currentYear} Aviacapital. All rights reserved.
             </div>
             
             {/* Compliance Badges */}
