@@ -60,10 +60,10 @@ const ContactUs = () => {
               Reach out via email for general support or business inquiries.
             </p>
             <a
-              href="mailto:support@aviacapital.com"
+              href="mailto:support@aviacapital.capital"
               className="text-primary font-medium hover:underline"
             >
-              support@aviacapital.com
+              support@aviacapital.capital
             </a>
           </div>
 

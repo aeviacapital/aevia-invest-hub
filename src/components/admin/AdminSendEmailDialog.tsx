@@ -39,7 +39,7 @@ const templates = [
     name: "Aviacapital Classic",
     header: "Welcome to Aviacapital",
     footer:
-      "© 2025 Aviacapital — Empowering your financial future. All rights reserved.",
+      "© 2026 Aviacapital — Empowering your financial future. All rights reserved.",
     accent: BRAND_ACCENT,
     preview: "Professional greeting email template with simple design.",
   },

@@ -239,7 +239,7 @@ export const AdminSettings = () => {
                 <Input
                   id="supportEmail"
                   type="email"
-                  placeholder="support@aviacapital.com"
+                  placeholder="support@aviacapital.capital"
                 />
               </div>
             </div>

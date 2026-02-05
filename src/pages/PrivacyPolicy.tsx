@@ -152,10 +152,10 @@ export default function PrivacyPolicy() {
           <p className="text-muted-foreground">
             Email:{" "}
             <a
-              href="mailto:support@aviacapital.com"
+              href="mailto:support@aviacapital.capital"
               className="text-primary hover:underline"
             >
-              support@aviacapital.com
+              support@aviacapital.capital
             </a>
             <br />
             Address: C/O Ashley King Ltd, 68 St. Margarets Road, Edgware,

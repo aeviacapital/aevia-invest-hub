@@ -60,7 +60,7 @@ const Footer = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center text-muted-foreground">
                   <Mail className="w-4 h-4 mr-3 text-primary" />
-                  <span>support@aviacapital.com</span>
+                  <span>support@aviacapital.capital</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <MessageCircle className="w-4 h-4 mr-3 text-primary" />

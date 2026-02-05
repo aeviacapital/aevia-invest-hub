@@ -22,7 +22,7 @@ const HelpCenter = () => {
       icon: <CreditCard className="text-primary h-6 w-6" />,
       question: "How do I request a refund?",
       answer:
-        "To request a refund, email support@aviacapital.com with your full name, transaction details, and reason for the request. Our team will respond within 7 business days.",
+        "To request a refund, email support@aviacapital.capital with your full name, transaction details, and reason for the request. Our team will respond within 7 business days.",
     },
     {
       icon: <User className="text-primary h-6 w-6" />,
@@ -101,10 +101,10 @@ const HelpCenter = () => {
                 Get assistance via email
               </p>
               <a
-                href="mailto:support@aviacapital.com"
+                href="mailto:support@aviacapital.capital"
                 className="text-primary font-medium flex items-center gap-1 hover:underline"
               >
-                support@aviacapital.com <ArrowRightCircle className="h-4 w-4" />
+                support@aviacapital.capital <ArrowRightCircle className="h-4 w-4" />
               </a>
             </div>
 

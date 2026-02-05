@@ -134,10 +134,10 @@ const TermsOfService = () => {
               <li className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-primary" />
                 <a
-                  href="mailto:support@aviacapital.com"
+                  href="mailto:support@aviacapital.capital"
                   className="hover:text-primary transition-colors"
                 >
-                  support@aviacapital.com
+                  support@aviacapital.capital
                 </a>
               </li>
               <li className="flex items-center gap-2">
