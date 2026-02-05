@@ -113,7 +113,7 @@ const Auth = () => {
     setError('');
 
     try {
-      const res = await fetch("https://aviacapital.onrender.com/verify-otp", {
+      const res = await fetch("https://aeviacapital.onrender.com/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -11,6 +11,7 @@ import {createClient} from "@supabase/supabase-js";
 
 dotenv.config();
 
+
 // ---- ENVIRONMENT ----
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,11 +27,22 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "*", // TODO: restrict to your frontend in production
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: [
+      'https://aviacapital.capital',
+      'http://www.aviacapital.capital',
+      'http://aeviacapital.com',
+      'http://www.aeviacapital.com',
+      'http://localhost:8080',
+      'http://localhost:3000'
+
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-client-info', 'apikey'],
   })
 );
+app.options(/.*/, cors());
+
 
 // ---- VERIFY OTP ----
 app.post("/verify-otp", async (req, res) => {
