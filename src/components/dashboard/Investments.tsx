@@ -56,6 +56,7 @@ const Investments = () => {
       .from("user_investments")
       .select(`*, investment_plans (*)`)
       .eq("user_id", user.id)
+      .eq("status", "active")
       .order("created_at", { ascending: false });
 
     setUserInvestments(data || []);

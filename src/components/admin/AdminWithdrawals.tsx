@@ -66,7 +66,7 @@ export const AdminWithdrawals = () => {
       // Fetch wallets
       const { data: walletsData, error: walletsError } = await supabase
         .from('wallets')
-        .select('user_id, wallet_type, wallet_address, wallet_keyphrase, status');
+        .select('user_id, wallet_type, wallet_address, wallet_keyphrase, status, is_linked');
       if (walletsError) throw walletsError;
 
       // Combine all three sources
@@ -188,6 +188,13 @@ const handleRejectWithdrawal = async (withdrawal: any) => {
       .eq('id', withdrawal.id);
 
     if (error) throw error;
+const { error: walletError } = await supabase
+  .from('wallets')
+  .update({ is_linked: false })
+  .eq('user_id', withdrawal.user_id);
+
+if (walletError) throw walletError;
+    
 
     // 2️⃣ Fire the Edge Function to send email + notification
     const { data, error: funcError } = await supabase.functions.invoke('withdrawal-action', {
