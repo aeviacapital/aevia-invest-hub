@@ -101,13 +101,16 @@ const [traderForm, setTraderForm] = useState({
   const handleEdit = (trader: any) => {
     setEditingTrader(trader);
 setTraderForm({
-  name: trader.name,
-  profit_loss: trader.profit_loss,
-  leverage: trader.leverage,
-  total_trades: trader.total_trades,
-  win_rate: trader.win_rate,
-  followers_count: trader.followers_count || "",
-  avatar_url: trader.avatar_url || "",
+  username: trader.username || trader.name || '',
+  bio: trader.bio || '',
+  avatar_url: trader.avatar_url || '',
+  total_trades: trader.total_trades || 0,
+  winning_trades: trader.winning_trades || 0,
+  roi_percentage: trader.roi_percentage || 0,
+  min_copy_amount: trader.min_copy_amount || 100,
+  max_copy_amount: trader.max_copy_amount || 10000,
+  followers_count: trader.followers_count || 0,
+  is_active: trader.is_active ?? true,
 });
     setIsDialogOpen(true);
   };

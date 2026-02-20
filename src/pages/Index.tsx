@@ -15,10 +15,9 @@ import React, { useEffect, useRef } from 'react';
 // 2. Define the Ticker Widget Component
 // We move the TradingView logic into a function component
 const TradingViewTicker = () => {
-  const container = useRef();
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Clear the container to prevent duplicates on re-render
     if (container.current) {
       container.current.innerHTML = '';
     }
@@ -46,15 +45,15 @@ const TradingViewTicker = () => {
     });
 
     // Append the script to the referenced container
-    container.current.appendChild(script);
+    container.current?.appendChild(script);
 
-    // Cleanup function to remove the script on unmount
     return () => {
-      if (container.current && container.current.contains(script)) {
-        container.current.removeChild(script);
+      const el = container.current;
+      if (el && el.contains(script)) {
+        el.removeChild(script);
       }
     };
-  }, []); // Empty dependency array ensures it runs only once on mount
+  }, []);
 
   // We return the div structure where the script will inject the widget,
   // preserving the original class names.
@@ -68,7 +67,7 @@ const TradingViewTicker = () => {
 
 // 3. Define the News Widget Component
 const TradingViewNews = () => {
-  const container = useRef();
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (container.current) {
@@ -90,11 +89,12 @@ const TradingViewNews = () => {
       "locale": "en"
     });
 
-    container.current.appendChild(script);
+    container.current?.appendChild(script);
 
     return () => {
-      if (container.current && container.current.contains(script)) {
-        container.current.removeChild(script);
+      const el = container.current;
+      if (el && el.contains(script)) {
+        el.removeChild(script);
       }
     };
   }, []);

@@ -115,7 +115,7 @@ const CopyTrading = () => {
       await supabase
         .from('copy_trading')
         .update({
-          total_profit: (parseFloat(copyTrade.total_profit || 0) + profit).toFixed(2),
+          total_profit: parseFloat((parseFloat(String(copyTrade.total_profit || 0)) + profit).toFixed(2)),
           last_trade_symbol: randomPair,
           last_profit: profit.toFixed(2),
         })

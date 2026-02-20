@@ -130,11 +130,82 @@ export type Database = {
         }
         Relationships: []
       }
+      email_history: {
+        Row: {
+          admin_id: string | null
+          body: string
+          id: string
+          recipient_email: string
+          sent_at: string | null
+          subject: string
+          template: string
+        }
+        Insert: {
+          admin_id?: string | null
+          body: string
+          id?: string
+          recipient_email: string
+          sent_at?: string | null
+          subject: string
+          template: string
+        }
+        Update: {
+          admin_id?: string | null
+          body?: string
+          id?: string
+          recipient_email?: string
+          sent_at?: string | null
+          subject?: string
+          template?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_history_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      email_otps: {
+        Row: {
+          consumed: boolean | null
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          otp_hash: string
+          purpose: string
+          user_id: string | null
+        }
+        Insert: {
+          consumed?: boolean | null
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          otp_hash: string
+          purpose: string
+          user_id?: string | null
+        }
+        Update: {
+          consumed?: boolean | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          otp_hash?: string
+          purpose?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       investment_plans: {
         Row: {
           created_at: string | null
           description: string
-          duration_months: number
+          duration_days: number
           expected_return_max: number
           expected_return_min: number
           features: string[]
@@ -149,7 +220,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description: string
-          duration_months: number
+          duration_days: number
           expected_return_max: number
           expected_return_min: number
           features: string[]
@@ -164,7 +235,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string
-          duration_months?: number
+          duration_days?: number
           expected_return_max?: number
           expected_return_min?: number
           features?: string[]
@@ -216,6 +287,7 @@ export type Database = {
           created_at: string | null
           document_type: string
           document_url: string
+          file_path: string | null
           id: string
           rejection_reason: string | null
           status: string | null
@@ -226,6 +298,7 @@ export type Database = {
           created_at?: string | null
           document_type: string
           document_url: string
+          file_path?: string | null
           id?: string
           rejection_reason?: string | null
           status?: string | null
@@ -236,6 +309,7 @@ export type Database = {
           created_at?: string | null
           document_type?: string
           document_url?: string
+          file_path?: string | null
           id?: string
           rejection_reason?: string | null
           status?: string | null
@@ -252,11 +326,12 @@ export type Database = {
           credit_requirements: string | null
           default_terms: string | null
           disbursement_details: string | null
+          due_date: string | null
           fees_charges: number | null
           id: string
           interest_rate: number
           loan_agreement: string | null
-          loan_term_months: number
+          loan_term_days: number
           loan_type: string
           principal_amount: number
           repayment_schedule: string
@@ -271,11 +346,12 @@ export type Database = {
           credit_requirements?: string | null
           default_terms?: string | null
           disbursement_details?: string | null
+          due_date?: string | null
           fees_charges?: number | null
           id?: string
           interest_rate: number
           loan_agreement?: string | null
-          loan_term_months: number
+          loan_term_days: number
           loan_type: string
           principal_amount: number
           repayment_schedule: string
@@ -290,11 +366,12 @@ export type Database = {
           credit_requirements?: string | null
           default_terms?: string | null
           disbursement_details?: string | null
+          due_date?: string | null
           fees_charges?: number | null
           id?: string
           interest_rate?: number
           loan_agreement?: string | null
-          loan_term_months?: number
+          loan_term_days?: number
           loan_type?: string
           principal_amount?: number
           repayment_schedule?: string
@@ -340,6 +417,62 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_codes: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          otp_code: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          otp_code: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          otp_code?: string
+        }
+        Relationships: []
+      }
+      password_resets: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: number
+          token_hash: string
+          used: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: number
+          token_hash: string
+          used?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: number
+          token_hash?: string
+          used?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_resets_email_fkey"
+            columns: ["email"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["email"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -353,6 +486,7 @@ export type Database = {
           invitation_code: string | null
           is_verified: boolean | null
           kyc_status: string | null
+          last_bonus_date: string | null
           phone: string | null
           referral_code: string | null
           referred_by: string | null
@@ -371,6 +505,7 @@ export type Database = {
           invitation_code?: string | null
           is_verified?: boolean | null
           kyc_status?: string | null
+          last_bonus_date?: string | null
           phone?: string | null
           referral_code?: string | null
           referred_by?: string | null
@@ -389,6 +524,7 @@ export type Database = {
           invitation_code?: string | null
           is_verified?: boolean | null
           kyc_status?: string | null
+          last_bonus_date?: string | null
           phone?: string | null
           referral_code?: string | null
           referred_by?: string | null
@@ -483,11 +619,15 @@ export type Database = {
           is_copy_trade: boolean | null
           leverage: number | null
           lot_size: number
+          margin: number | null
           margin_used: number | null
           market_type: string
+          order_type: string | null
           profit_loss: number | null
           status: string | null
+          stop_loss: number | null
           symbol: string
+          take_profit: number | null
           trade_type: string
           trader_id: string | null
           unrealized_pnl: number | null
@@ -503,11 +643,15 @@ export type Database = {
           is_copy_trade?: boolean | null
           leverage?: number | null
           lot_size: number
+          margin?: number | null
           margin_used?: number | null
           market_type: string
+          order_type?: string | null
           profit_loss?: number | null
           status?: string | null
+          stop_loss?: number | null
           symbol: string
+          take_profit?: number | null
           trade_type: string
           trader_id?: string | null
           unrealized_pnl?: number | null
@@ -523,11 +667,15 @@ export type Database = {
           is_copy_trade?: boolean | null
           leverage?: number | null
           lot_size?: number
+          margin?: number | null
           margin_used?: number | null
           market_type?: string
+          order_type?: string | null
           profit_loss?: number | null
           status?: string | null
+          stop_loss?: number | null
           symbol?: string
+          take_profit?: number | null
           trade_type?: string
           trader_id?: string | null
           unrealized_pnl?: number | null
@@ -543,12 +691,67 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          amount: number
+          balance_after: number | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          reference: string | null
+          status: string
+          type: string
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reference?: string | null
+          status?: string
+          type: string
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reference?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_investments: {
         Row: {
           amount: number
           created_at: string | null
           end_date: string | null
           id: string
+          is_visible: boolean
           plan_id: string
           returns_earned: number | null
           start_date: string | null
@@ -561,6 +764,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string | null
           id?: string
+          is_visible?: boolean
           plan_id: string
           returns_earned?: number | null
           start_date?: string | null
@@ -573,6 +777,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string | null
           id?: string
+          is_visible?: boolean
           plan_id?: string
           returns_earned?: number | null
           start_date?: string | null
@@ -611,42 +816,101 @@ export type Database = {
         }
         Relationships: []
       }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          is_bonus_eligible: boolean | null
+          is_linked: boolean | null
+          last_bonus_date: string | null
+          linked_at: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+          wallet_keyphrase: string | null
+          wallet_type: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_bonus_eligible?: boolean | null
+          is_linked?: boolean | null
+          last_bonus_date?: string | null
+          linked_at?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+          wallet_keyphrase?: string | null
+          wallet_type?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_bonus_eligible?: boolean | null
+          is_linked?: boolean | null
+          last_bonus_date?: string | null
+          linked_at?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+          wallet_keyphrase?: string | null
+          wallet_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       withdrawals: {
         Row: {
           admin_notes: string | null
           amount: number
+          approved_at: string | null
           created_at: string | null
           currency: string
           id: string
           processed_at: string | null
+          rejected_at: string | null
           status: string | null
           user_id: string
-          wallet_address: string
-          wallet_keyphrase: string | null
         }
         Insert: {
           admin_notes?: string | null
           amount: number
+          approved_at?: string | null
           created_at?: string | null
           currency: string
           id?: string
           processed_at?: string | null
+          rejected_at?: string | null
           status?: string | null
           user_id: string
-          wallet_address: string
-          wallet_keyphrase?: string | null
         }
         Update: {
           admin_notes?: string | null
           amount?: number
+          approved_at?: string | null
           created_at?: string | null
           currency?: string
           id?: string
           processed_at?: string | null
+          rejected_at?: string | null
           status?: string | null
           user_id?: string
-          wallet_address?: string
-          wallet_keyphrase?: string | null
         }
         Relationships: []
       }
@@ -655,6 +919,50 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_pending_trade: {
+        Args: { p_current_price: number; p_trade_id: string }
+        Returns: undefined
+      }
+      add_to_trade: {
+        Args: {
+          p_additional_lot: number
+          p_current_price: number
+          p_trade_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      admin_adjust_balance: {
+        Args: {
+          p_amount: number
+          p_metadata?: Json
+          p_reason: string
+          p_reference?: string
+          p_user_id: string
+        }
+        Returns: {
+          new_balance: number
+          tx_id: string
+        }[]
+      }
+      close_trade: {
+        Args: { p_exit_price: number; p_trade_id: string }
+        Returns: undefined
+      }
+      create_transaction_atomic: {
+        Args: {
+          p_amount: number
+          p_metadata?: Json
+          p_reference?: string
+          p_type: string
+          p_user_id: string
+          p_wallet_id: string
+        }
+        Returns: {
+          new_balance: number
+          tx_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -662,10 +970,31 @@ export type Database = {
         }
         Returns: boolean
       }
+      open_trade: {
+        Args: {
+          p_entry_price: number
+          p_leverage: number
+          p_lot_size: number
+          p_market_type: string
+          p_order_type: string
+          p_stop_loss: number
+          p_symbol: string
+          p_take_profit: number
+          p_trade_type: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      settle_matured_investments: { Args: never; Returns: undefined }
       update_trade_price: {
         Args: { new_current_price: number; trade_id: string }
         Returns: undefined
       }
+      update_wallet_balance: {
+        Args: { p_new_balance: number; p_user_id: string }
+        Returns: undefined
+      }
+      update_wallet_pnl: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
